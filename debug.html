@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Tangram Debug</title></head>
+<body>
+<h2>Script Error Check</h2>
+<pre id="out">Loading...</pre>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+    document.getElementById('out').textContent = '❌ ERROR:\n' + msg + '\nLine: ' + line + '\nCol: ' + col + '\n\n' + (err ? err.stack : '');
+    return true;
+};
+
+// Fake DOM for testing
+const fakeEl = { addEventListener:()=>{}, classList:{add:()=>{},remove:()=>{},contains:()=>false}, innerHTML:'', textContent:'', style:{}, setAttribute:()=>{}, getAttribute:()=>null, appendChild:()=>{}, querySelectorAll:()=>[], querySelector:()=>null, createSVGPoint:()=>({x:0,y:0,matrixTransform:()=>({x:0,y:0})}), getScreenCTM:()=>({inverse:()=>({})}) };
+const origGet = document.getElementById.bind(document);
+const origQS = document.querySelector.bind(document);
+const origQSA = document.querySelectorAll.bind(document);
+
+// Load and eval script
+fetch('script.js').then(r=>r.text()).then(code => {
+    try {
+        // Just check syntax
+        new Function(code);
+        document.getElementById('out').textContent = '✅ Syntax OK - no parse errors found!\n\nNow testing init...\n';
+        
+        // Try to detect common issues
+        if (code.includes('communityFavorites') && code.indexOf('const communityFavorites') > code.indexOf('communityFavorites')) {
+            document.getElementById('out').textContent += '⚠️ communityFavorites used before declaration!\n';
+        } else {
+            document.getElementById('out').textContent += '✅ communityFavorites declaration order OK\n';
+        }
+        
+        // Check for undefined references
+        const undefinedRefs = [];
+        if (code.includes('silOffsetX') && !code.includes('this.silOffsetX')) undefinedRefs.push('silOffsetX (not this.)');
+        if (code.includes('levelBtns') && !code.includes('levelBtns =')) undefinedRefs.push('levelBtns (never declared)');
+        if (code.includes('silhouetteGroup.') && !code.includes('this.silhouetteGroup')) undefinedRefs.push('silhouetteGroup (not this.)');
+        if (code.includes('isCreatorMode') && !code.includes('this.isCreatorMode') && !code.includes('mainEngine.isCreatorMode')) undefinedRefs.push('isCreatorMode (not mainEngine.)');
+        
+        if (undefinedRefs.length > 0) {
+            document.getElementById('out').textContent += '⚠️ Possible undefined references:\n  - ' + undefinedRefs.join('\n  - ') + '\n';
+        } else {
+            document.getElementById('out').textContent += '✅ No obvious undefined references\n';
+        }
+        
+    } catch(e) {
+        document.getElementById('out').textContent = '❌ SYNTAX ERROR:\n' + e.message + '\n\nLine hint: ' + e.lineNumber;
+    }
+}).catch(e => {
+    document.getElementById('out').textContent = '❌ Could not load script.js: ' + e.message;
+});
+</script>
+</body>
+</html>

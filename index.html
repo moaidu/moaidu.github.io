@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>웹/앱 호환 칠교놀이</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1 id="app-title">칠교(Tangram) 퍼즐</h1>
+        <div class="level-controls">
+            <button id="show-dashboard-btn" class="level-btn mini" style="background:#feca57; color:#333;">📊</button>
+            <button id="nav-btn-learning" class="level-btn">🎓 배우기</button>
+            <button id="nav-btn-challenge" class="level-btn">🏆 도전하기</button>
+            <button id="show-plaza-btn" class="level-btn">🎡 광장</button>
+            <button id="nav-btn-battle" class="level-btn" style="background:#eb4d4b; color:#fff;">⚔️ 배틀하기</button>
+            <button id="creator-mode-btn" class="level-btn" style="background:#4834d4; color:#fff;">+ 만들기</button>
+        </div>
+    </header>
+
+    <!-- ⚔️ 1:1 아이템 배틀 전용 뷰 -->
+    <div id="battle-view" class="battle-overlay hidden">
+        <div class="battle-header">
+            <button id="close-battle-btn" class="back-btn">← 나가기</button>
+            <div class="battle-timer">기억의 시간: <span id="battle-countdown">3</span></div>
+        </div>
+        
+        <div class="battle-split-container">
+            <!-- Player 1 Arena -->
+            <div class="player-arena" id="p1-arena">
+                <div class="player-label">P1 (왼쪽)</div>
+                <div class="canvas-wrapper">
+                    <svg id="canvas-p1" class="battle-canvas" viewBox="0 0 600 800" shape-rendering="geometricPrecision">
+                        <defs><filter id="shadow-p1"><feDropShadow dx="2" dy="5" stdDeviation="4" flood-opacity="0.3"/></filter></defs>
+                        <g id="sil-p1" class="battle-sil"></g>
+                        <g id="pieces-p1" class="battle-pieces"></g>
+                        <!-- 안개 레이어 -->
+                        <rect id="fog-p1" class="fog-layer" width="600" height="800" fill="#2d3436"></rect>
+                    </svg>
+                </div>
+                <div class="item-controls">
+                    <button class="item-btn peek-btn" data-player="p1">👁️ 잠깐(3)</button>
+                    <button class="item-btn hint-btn" data-player="p1">🔍 힌트(1)</button>
+                </div>
+            </div>
+
+            <!-- Player 2 Arena -->
+            <div class="player-arena" id="p2-arena">
+                <div class="player-label">P2 (오른쪽)</div>
+                <div class="canvas-wrapper">
+                    <svg id="canvas-p2" class="battle-canvas" viewBox="0 0 600 800" shape-rendering="geometricPrecision">
+                        <defs><filter id="shadow-p2"><feDropShadow dx="2" dy="5" stdDeviation="4" flood-opacity="0.3"/></filter></defs>
+                        <g id="sil-p2" class="battle-sil"></g>
+                        <g id="pieces-p2" class="battle-pieces"></g>
+                        <!-- 안개 레이어 -->
+                        <rect id="fog-p2" class="fog-layer" width="600" height="800" fill="#2d3436"></rect>
+                    </svg>
+                </div>
+                <div class="item-controls">
+                    <button class="item-btn peek-btn" data-player="p2">👁️ 잠깐(3)</button>
+                    <button class="item-btn hint-btn" data-player="p2">🔍 힌트(1)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 가로 모드 권장 안내 -->
+        <div id="orientation-warning" class="warning-overlay hidden">
+            <div class="warning-box">
+                <p>⚔️ 배틀 모드는 <b>가로 모드(Landscape)</b>에서<br>가장 재미있게 즐길 수 있습니다!</p>
+                <p style="font-size:14px; margin-top:10px;">화면을 돌려주세요. 🔄</p>
+                <button id="force-start-battle" class="level-btn mini" style="margin-top:15px;">무시하고 시작</button>
+            </div>
+        </div>
+
+        <!-- 승리 안내 모달 -->
+        <div id="battle-result-modal" class="modal hidden">
+            <div class="modal-content" style="text-align:center;">
+                <h1 id="winner-text" style="font-size:48px; color:#f1c40f;">P1 WIN!</h1>
+                <p id="battle-result-details">정말 박진감 넘치는 경기였어요!</p>
+                <button id="rematch-btn" class="action-btn primary" style="width:100%; margin-top:20px;">다시 한 판!</button>
+                <button id="exit-battle-btn" class="action-btn secondary" style="width:100%; margin-top:10px;">광장으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎓 배우기(튜토리얼) 전용 서브 메뉴 -->
+    <div id="learning-nav-panel" class="custom-nav-panel hidden">
+        <span class="nav-label">🎓 칠교 배우기:</span>
+        <div class="custom-list">
+            <button class="level-btn" data-level="tut_move">1단계(이동)</button>
+            <button class="level-btn" data-level="tut_rotate">2단계(회전)</button>
+            <button class="level-btn" data-level="tut_square">3단계(사각형)</button>
+        </div>
+    </div>
+
+    <!-- 🏆 도전하기 전용 서브 메뉴 -->
+    <div id="challenge-nav-panel" class="custom-nav-panel hidden">
+        <div class="nav-section">
+            <span class="nav-label">🏆 정석 도안:</span>
+            <div class="custom-list">
+                <button class="level-btn" data-level="easy">초급(광장)</button>
+                <button class="level-btn" data-level="medium">중급(우주선)</button>
+                <button class="level-btn" data-level="hard">고급(다이아몬드)</button>
+            </div>
+        </div>
+        <div class="nav-section" style="margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
+            <span class="nav-label">⭐ 추천 테마:</span>
+            <div class="custom-list">
+                <button class="level-btn" data-level="Swan">🦢 백조</button>
+                <button class="level-btn" data-level="Cat">🐱 고양이</button>
+                <button class="level-btn" data-level="Boat">⛵ 요트</button>
+                <button class="level-btn" data-level="Heart">❤️ 하트</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💾 나만의 문제 서브 메뉴 -->
+    <div id="custom-puzzles-nav" class="custom-nav-panel hidden">
+        <span class="nav-label">💾 나만의 문제:</span>
+        <div id="custom-list-container" class="custom-list"></div>
+    </div>
+
+    <!-- 튜토리얼 가이드 텍스트 -->
+    <div id="tutorial-guide" class="guide-panel hidden">
+        <div class="guide-text"></div>
+    </div>
+
+    <main id="game-container">
+        <!-- SVG Canvas for all rendering -->
+        <svg id="tangram-canvas" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
+            <defs>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="5" stdDeviation="4" flood-opacity="0.3"/>
+                </filter>
+            </defs>
+            <!-- Background Silhouette Group -->
+            <g id="silhouette-group" shape-rendering="geometricPrecision"></g>
+            
+            <!-- Pieces Group -->
+            <g id="pieces-group" shape-rendering="geometricPrecision"></g>
+        </svg>
+    </main>
+
+    <!-- Floating UI Controls -->
+    <div class="controls-panel">
+        <button id="reset-btn" class="action-btn secondary">
+            초기화
+        </button>
+    </div>
+
+    <!-- 창작 모드 전용 툴바 (동적 표시) -->
+    <div id="creator-toolbar" class="toolbar hidden">
+        <button id="save-puzzle-btn" class="action-btn primary">💾 내 목록에 저장</button>
+        <button id="share-plaza-btn" class="action-btn" style="background:#ffa502;">🚀 광장으로 보내기(공유)</button>
+        <button id="cancel-creator-btn" class="action-btn secondary">취소</button>
+    </div>
+
+    <!-- 환영 모달창 (이름 입력) -->
+    <div id="welcome-modal" class="modal">
+        <!-- 기본적으로 보여지므로 hidden 없음 -->
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="font-size:24px; margin-bottom:10px;">마법의 칠교놀이에<br>온 걸 환영해! 🎉</h2>
+            <p style="margin-top:20px; font-size:16px;">어떤 친구가 퍼즐을 맞출 건가요?</p>
+            <input type="text" id="player-name-input" placeholder="이름을 적어주세요" style="padding:15px; width:80%; margin:20px 0; font-size:18px; border-radius:10px; border:2px solid #ddd; text-align:center;">
+            <button id="start-game-btn" class="action-btn" style="width:80%;">진입하기</button>
+        </div>
+    </div>
+
+    <!-- 🏆 칠교 명예의 전당(랭킹) 모달 -->
+    <div id="dashboard-modal" class="modal hidden">
+        <div class="modal-content ranking-content">
+            <h2 style="font-size:22px; margin-bottom:5px;">🏆 칠교 명예의 전당 (TOP 10)</h2>
+            <p style="font-size:14px; color:#636e72; margin-bottom:15px;">서로의 실력을 겨뤄보세요! (최고 기록 기준)</p>
+            
+            <!-- 랭킹 탭 전환 -->
+            <div class="ranking-tabs">
+                <button class="rank-tab-btn active" data-rank-level="easy">초급</button>
+                <button class="rank-tab-btn" data-rank-level="medium">중급</button>
+                <button class="rank-tab-btn" data-rank-level="hard">고급</button>
+            </div>
+
+            <div id="dashboard-data-container" style="margin-top:15px; max-height:450px; overflow-y:auto; border-top:1.5px solid #dfe4ea; padding-top:10px;"></div>
+            
+            <button id="close-dashboard-btn" class="action-btn secondary" style="width:100%; margin-top:15px;">광장으로 돌아가기</button>
+        </div>
+    </div>
+    <!-- 🎡 칠교 광장 (공유 갤러리) 모달 -->
+    <div id="plaza-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <h2 style="font-size:24px; color:#ffa502;">🎡 칠교 광장 (Plaza)</h2>
+            <p>다양한 친구들이 만든 기발한 모양들이 전시되어 있어요!</p>
+            
+            <div id="plaza-gallery" class="plaza-grid">
+                <!-- 도안 카드들이 여기에 렌더링됨 -->
+            </div>
+            
+            <button id="close-plaza-btn" class="action-btn" style="background:#2f3542; width:100%; margin-top:20px;">광장 나가기</button>
+        </div>
+    </div>
+
+    <!-- 공유 링크 복사 안내 모달 -->
+    <div id="share-link-modal" class="modal hidden">
+        <div class="modal-content" style="text-align: center;">
+            <h2>🚀 도안 출판 완료!</h2>
+            <p>아래 링크를 복사해서 친구에게 보내보세요.</p>
+            <input type="text" id="share-link-input" readonly style="width:100%; padding:15px; margin:10px 0; border:2px solid #ddd; font-size:12px; background:#f9f9f9; border-radius:10px;">
+            <button id="copy-link-btn" class="action-btn primary" style="width:100%;">링크 복사하기</button>
+            <button id="close-share-modal" class="action-btn secondary" style="width:100%; margin-top:10px;">닫기</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
