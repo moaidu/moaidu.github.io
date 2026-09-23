@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// 말하는 서술형 수학 노트 - Firestore 보안 규칙 (학원별 데이터 분리 버전)
+// Firebase 콘솔 > Firestore Database > 규칙 탭에 그대로 붙여넣고 "게시"하세요.
+//
+// 구조
+//   academies/{academyId}                 학원 정보 (academyId = 선생님 계정 uid)
+//   academies/{academyId}/data/{docName}  classes, customProblems, hiddenBase, completions, submissions
+//   inviteCodes/{code}                    초대코드 → { academyId, classId }
+//
+// 주의: 학생은 아직 로그인이 없어서, 학생이 써야 하는 문서(classes/completions/submissions)는
+//       초대코드로 학원 ID를 알아낸 사람이면 쓸 수 있습니다. (다음 단계: 학생 익명 로그인으로 강화)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(academyId) {
+      return request.auth != null && request.auth.uid == academyId;
+    }
+
+    match /academies/{academyId} {
+      allow read, write: if isOwner(academyId);
+
+      match /data/{docName} {
+        // 학생 화면에서도 문제·반·숙제를 읽어야 하므로 읽기는 허용
+        allow read: if true;
+        // 문제은행/숨김 목록은 선생님만, 반 명단·완료기록·제출함은 학생도 씀
+        allow write: if isOwner(academyId)
+                     || docName in ['classes', 'completions', 'submissions'];
+      }
+    }
+
+    match /inviteCodes/{code} {
+      allow get: if true;          // 코드를 아는 사람만 조회 가능
+      allow list: if false;        // 전체 코드 목록 훑어보기는 금지
+      allow create: if request.auth != null
+                    && request.resource.data.academyId == request.auth.uid;
+      allow update, delete: if request.auth != null
+                    && resource.data.academyId == request.auth.uid
+                    && (!('academyId' in request.resource.data) || request.resource.data.academyId == request.auth.uid);
+    }
+
+    // 학원 분리 전의 공용 컬렉션 - 더 이상 쓰지 않음
+    match /academy/{doc} {
+      allow read, write: if false;
+    }
+  }
+}

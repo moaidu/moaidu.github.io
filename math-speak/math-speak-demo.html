@@ -325,6 +325,7 @@
   .photo-preview.show{display:block;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 </head>
@@ -494,9 +495,41 @@
       </div>
     </div>
 
+    <!-- ============ 선생님 로그인 / 학원 등록 ============ -->
+    <div id="teacherLoginScreen" class="hidden">
+      <button class="back-btn" id="loginBackBtn">‹ 학생 화면으로</button>
+      <div class="card" style="padding:24px 20px;">
+        <div style="font-size:16px; font-weight:800; margin-bottom:4px;">선생님 로그인</div>
+        <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; line-height:1.5;">학원 계정으로 로그인하면 우리 학원의 반·문제·제출물만 보여요.</div>
+        <div class="mode-tabs" id="loginTabs" style="margin-bottom:14px;">
+          <button class="mode-tab active" data-login-tab="login">로그인</button>
+          <button class="mode-tab" data-login-tab="signup">새 학원 등록</button>
+        </div>
+        <div id="loginAcademyNameField" class="hidden">
+          <label class="ff-label">학원 이름</label>
+          <input type="text" id="loginAcademyName" class="ff-input" placeholder="예: 지니수학학원">
+        </div>
+        <label class="ff-label">이메일</label>
+        <input type="email" id="loginEmail" class="ff-input" placeholder="teacher@example.com" autocomplete="email">
+        <label class="ff-label">비밀번호</label>
+        <input type="password" id="loginPassword" class="ff-input" placeholder="6자 이상" autocomplete="current-password">
+        <div class="status-msg" id="loginStatusMsg"></div>
+        <button class="record-btn" id="loginSubmitBtn" style="margin-top:14px;">로그인</button>
+        <button class="back-btn" id="resetPwBtn" style="width:100%; justify-content:center; margin-top:10px;">비밀번호를 잊었어요</button>
+      </div>
+    </div>
+
     <!-- ============ 화면 3: 선생님 모드 ============ -->
     <div id="teacherScreen" class="hidden">
       <button class="back-btn" id="teacherBackBtn">‹ 학생 화면으로</button>
+
+      <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px;">
+        <div style="min-width:0;">
+          <div style="font-size:14px; font-weight:800;" id="academyNameLabel"></div>
+          <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px; overflow:hidden; text-overflow:ellipsis;" id="academyAccountLabel"></div>
+        </div>
+        <button class="teacher-entry" id="logoutBtn">로그아웃</button>
+      </div>
 
       <div class="card" style="padding:6px;">
         <div class="mode-tabs" id="teacherTabs">
@@ -509,7 +542,7 @@
         <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px;">
           <div>
             <div style="font-size:14px; font-weight:700;">문제 관리</div>
-            <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">우리 학원 문제은행 (이 브라우저에만 저장돼요)</div>
+            <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">우리 학원 문제은행</div>
           </div>
           <button class="teacher-entry" id="addProblemBtn" style="background:var(--green); color:#fff;">+ 새 문제</button>
         </div>
@@ -666,13 +699,21 @@ const firebaseConfig = {
 };
 let db = null;
 let storage = null;
+let auth = null;
 let fbAvailable = false;
 let storageAvailable = false;
+let authAvailable = false;
 try {
   if (typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     fbAvailable = true;
+    try {
+      auth = firebase.auth();
+      authAvailable = true;
+    } catch(e){
+      console.warn('Firebase Auth 사용 불가 - 선생님 모드는 이 기기 전용(오프라인)으로 동작합니다:', e.message);
+    }
     try {
       storage = firebase.storage();
       storageAvailable = true;
@@ -683,7 +724,20 @@ try {
 } catch(e){
   console.warn('Firebase 초기화 실패 - 이 브라우저 저장(localStorage)만으로 동작합니다:', e.message);
 }
-function FS_DOC(name){ return fbAvailable ? db.collection('academy').doc(name) : null; }
+
+// ============================================================
+// 학원(계정) 단위 데이터 분리
+// - 서버: academies/{학원ID}/data/{classes|customProblems|...}  (학원ID = 선생님 계정 uid)
+// - 초대코드 색인: inviteCodes/{코드} → { academyId, classId }  (학생은 코드만으로 자기 학원을 찾아감)
+// - 이 브라우저 저장(localStorage)도 학원별 키로 따로 보관
+// - Firebase를 못 쓰면 'local' 학원 하나로 동작 (예전 키 이름 그대로 사용 → 기존 로컬 데이터 유지)
+// ============================================================
+const LOCAL_ACADEMY = 'local';
+let activeAcademyId = null; // 지금 화면이 보고 있는 학원. null이면(초대코드 없이 둘러보기) 기본 문제만 보이고 아무것도 저장 안 함
+
+function isCloudAcademy(academyId){ return fbAvailable && !!academyId && academyId !== LOCAL_ACADEMY; }
+function academyDataRef(academyId, name){ return db.collection('academies').doc(academyId).collection('data').doc(name); }
+function FS_DOC(name){ return isCloudAcademy(activeAcademyId) ? academyDataRef(activeAcademyId, name) : null; }
 
 // Blob/File을 Storage에 올리고 다운로드 URL을 돌려줌. 실패하면(요금제 미전환 등) null 반환 - 호출부에서 항상 대비해야 함
 async function uploadToStorage(blob, path){
@@ -847,55 +901,77 @@ function lsSet(key, value){
   try { localStorage.setItem(key, JSON.stringify(value)); } catch(e){}
 }
 
-let customProblemsCache = lsGet('academy_custom_problems', []);
-let hiddenBaseCache = lsGet('academy_hidden_base_ids', []);
-let classesCache = lsGet('academy_classes', []);
-let completionsCache = lsGet('academy_completions', []);
+// 서버 문서 이름 → 이 브라우저 저장 키 뒷부분
+const DATA_DOCS = {
+  customProblems: 'custom_problems',
+  hiddenBase: 'hidden_base_ids',
+  classes: 'classes',
+  completions: 'completions',
+  submissions: 'submissions'
+};
+function lsDataKey(academyId, name){
+  return academyId === LOCAL_ACADEMY ? `academy_${DATA_DOCS[name]}` : `ac_${academyId}_${DATA_DOCS[name]}`;
+}
+const dataCache = { customProblems:[], hiddenBase:[], classes:[], completions:[], submissions:[] };
+let academyUnsubscribers = [];
 
 function syncToFirestore(name, list){
   const ref = FS_DOC(name);
   if (!ref) return; // Firebase 연결 안 됨 - localStorage만으로 계속 동작
   ref.set({ list }).catch(e => console.warn('Firestore 저장 실패(로컬에는 저장됨):', e.message));
 }
+function saveData(name, list){
+  dataCache[name] = list;
+  if (!activeAcademyId) return; // 소속 학원이 없으면(둘러보기) 저장하지 않음
+  lsSet(lsDataKey(activeAcademyId, name), list);
+  syncToFirestore(name, list);
+}
 
-function loadCustomProblems(){ return customProblemsCache; }
-function saveCustomProblems(list){
-  customProblemsCache = list;
-  lsSet('academy_custom_problems', list);
-  syncToFirestore('customProblems', list);
+// 보고 있는 학원을 바꿈: 캐시를 그 학원 것으로 갈아끼우고, 서버 실시간 구독도 그 학원으로 옮김
+function setActiveAcademy(academyId){
+  if (academyId === activeAcademyId) return;
+  academyUnsubscribers.forEach(unsub => { try { unsub(); } catch(e){} });
+  academyUnsubscribers = [];
+  activeAcademyId = academyId || null;
+  Object.keys(DATA_DOCS).forEach(name => {
+    dataCache[name] = activeAcademyId ? lsGet(lsDataKey(activeAcademyId, name), []) : [];
+  });
+  if (!isCloudAcademy(activeAcademyId)) return;
+  const subscribedId = activeAcademyId;
+  Object.keys(DATA_DOCS).forEach(name => {
+    academyUnsubscribers.push(academyDataRef(subscribedId, name).onSnapshot(
+      (doc) => {
+        if (activeAcademyId !== subscribedId) return;
+        if (doc.exists){
+          dataCache[name] = doc.data().list || [];
+          lsSet(lsDataKey(subscribedId, name), dataCache[name]);
+        }
+        setFbStatus(true);
+        refreshCurrentScreen();
+      },
+      (err) => { setFbStatus(false, err.message); }
+    ));
+  });
 }
-function loadHiddenBaseIds(){ return hiddenBaseCache; }
-function saveHiddenBaseIds(list){
-  hiddenBaseCache = list;
-  lsSet('academy_hidden_base_ids', list);
-  syncToFirestore('hiddenBase', list);
-}
+
+function loadCustomProblems(){ return dataCache.customProblems; }
+function saveCustomProblems(list){ saveData('customProblems', list); }
+function loadHiddenBaseIds(){ return dataCache.hiddenBase; }
+function saveHiddenBaseIds(list){ saveData('hiddenBase', list); }
 
 // ---- 반 / 학생 / 숙제 / 완료기록 저장소 ----
-function loadClasses(){ return classesCache; }
-function saveClasses(list){
-  classesCache = list;
-  lsSet('academy_classes', list);
-  syncToFirestore('classes', list);
-}
-function loadCompletions(){ return completionsCache; }
-function saveCompletions(list){
-  completionsCache = list;
-  lsSet('academy_completions', list);
-  syncToFirestore('completions', list);
-}
+function loadClasses(){ return dataCache.classes; }
+function saveClasses(list){ saveData('classes', list); }
+function loadCompletions(){ return dataCache.completions; }
+function saveCompletions(list){ saveData('completions', list); }
 
 // ---- 제출함 (학생이 낸 답안 스냅샷 + AI 피드백 기록) ----
-let submissionsCache = lsGet('academy_submissions', []);
 const MAX_SUBMISSIONS = 150; // Storage 업로드 성공 시엔 URL만 저장돼서 여유가 있지만, 업로드 실패시 썸네일(base64)이 쌓이는 걸 대비한 안전 상한
 
-function loadSubmissions(){ return submissionsCache; }
+function loadSubmissions(){ return dataCache.submissions; }
 function saveSubmissions(list){
   // 최신 것부터 MAX_SUBMISSIONS개까지만 유지 (썸네일이 쌓이면 문서 용량 한도를 넘을 수 있어서)
-  const trimmed = list.slice(-MAX_SUBMISSIONS);
-  submissionsCache = trimmed;
-  lsSet('academy_submissions', trimmed);
-  syncToFirestore('submissions', trimmed);
+  saveData('submissions', list.slice(-MAX_SUBMISSIONS));
 }
 function recordSubmission(entry){
   const list = loadSubmissions();
@@ -928,7 +1004,7 @@ async function submitRecordSubmission(aiEnabled, feedbackText){
   if (!currentStudentCtx) return;
   markHomeworkDone(currentStudentCtx.classId, currentStudentCtx.studentId, currentProblem.id);
   const ts = Date.now();
-  const base = `submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
+  const base = `academies/${activeAcademyId}/submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
   let snapshotBlob = null;
   try { snapshotBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.6)); } catch(e){}
   const [videoUrl, snapshotUrl] = await Promise.all([
@@ -948,7 +1024,7 @@ async function submitPhotoSubmission(aiEnabled, feedbackText){
   if (!currentStudentCtx) return;
   markHomeworkDone(currentStudentCtx.classId, currentStudentCtx.studentId, currentProblem.id);
   const ts = Date.now();
-  const base = `submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
+  const base = `academies/${activeAcademyId}/submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
   const photoUrl = await uploadToStorage(photoFile, base + '.jpg');
   const fallbackThumb = photoUrl ? null : await fileToThumbnail(photoFile, 320).catch(() => null);
   recordSubmission({
@@ -1028,7 +1104,7 @@ unitSelect.addEventListener('change', renderProblemList);
 // ============================================================
 // 학생 신원 (반/이름) - 최초 1회 선택 후 저장, 다음부턴 바로 숙제 화면으로
 // ============================================================
-let currentStudentCtx = lsGet('student_identity', null); // { classId, studentId }
+let currentStudentCtx = lsGet('student_identity', null); // { academyId, classId, studentId }
 
 const gateCodeInput = document.getElementById('gateCodeInput');
 const gateNameInput = document.getElementById('gateNameInput');
@@ -1053,30 +1129,89 @@ function setGateStatus(msg){
   gateStatusMsg.textContent = msg;
   gateStatusMsg.classList.add('show');
 }
-gateStartBtn.addEventListener('click', () => {
+// 초대코드 → { academyId, classId }. 서버 색인(inviteCodes)을 먼저 보고, 없으면 이 기기(오프라인 학원)에서 찾음
+async function findClassByInviteCode(code){
+  if (fbAvailable){
+    try {
+      const snap = await db.collection('inviteCodes').doc(code).get();
+      if (snap.exists){
+        const { academyId, classId } = snap.data();
+        if (academyId && classId) return { academyId, classId };
+      }
+    } catch(e){
+      console.warn('초대코드 조회 실패(이 기기 저장분에서 찾아볼게요):', e.message);
+    }
+  }
+  const local = lsGet(lsDataKey(LOCAL_ACADEMY, 'classes'), []).find(c => c.inviteCode === code);
+  return local ? { academyId: LOCAL_ACADEMY, classId: local.id } : null;
+}
+
+// 반에 학생을 찾아 넣음(이름이 같으면 기존 학생으로 로그인). 여러 학생이 동시에 들어와도
+// 명단이 덮어써지지 않도록 서버에서는 트랜잭션으로 처리. 반환: { studentId, classes } 또는 null
+async function joinClass(academyId, classId, name){
+  const findOrAdd = (classes) => {
+    const cls = classes.find(c => c.id === classId);
+    if (!cls) return null;
+    let student = (cls.students || []).find(s => s.name.trim() === name);
+    let added = false;
+    if (!student){
+      student = { id: 'stu-' + Date.now(), name };
+      cls.students = [...(cls.students || []), student];
+      added = true;
+    }
+    return { studentId: student.id, added };
+  };
+
+  if (!isCloudAcademy(academyId)){
+    const classes = lsGet(lsDataKey(academyId, 'classes'), []);
+    const r = findOrAdd(classes);
+    if (!r) return null;
+    if (r.added) lsSet(lsDataKey(academyId, 'classes'), classes);
+    return { studentId: r.studentId, classes };
+  }
+
+  const ref = academyDataRef(academyId, 'classes');
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const classes = snap.exists ? (snap.data().list || []) : [];
+    const r = findOrAdd(classes);
+    if (!r) return null;
+    if (r.added) tx.set(ref, { list: classes });
+    return { studentId: r.studentId, classes };
+  });
+}
+
+gateStartBtn.addEventListener('click', async () => {
   const code = gateCodeInput.value.trim();
   const name = gateNameInput.value.trim();
   if (!code || !name){ setGateStatus('초대코드와 이름을 모두 입력해 주세요.'); return; }
 
-  const classes = loadClasses();
-  const cls = classes.find(c => c.inviteCode === code);
-  if (!cls){ setGateStatus('초대코드를 다시 확인해 주세요.'); return; }
+  gateStartBtn.disabled = true;
+  setGateStatus('');
+  try {
+    const found = await findClassByInviteCode(code);
+    if (!found){ setGateStatus('초대코드를 다시 확인해 주세요.'); return; }
 
-  let student = (cls.students || []).find(s => s.name.trim() === name);
-  if (!student){
-    student = { id: 'stu-' + Date.now(), name };
-    cls.students = [...(cls.students||[]), student];
-    saveClasses(classes);
+    const joined = await joinClass(found.academyId, found.classId, name);
+    if (!joined){ setGateStatus('반 정보를 찾을 수 없어요. 선생님께 초대코드를 다시 확인해 주세요.'); return; }
+
+    setActiveAcademy(found.academyId);
+    dataCache.classes = joined.classes; // 서버 구독이 도착하기 전에도 바로 숙제가 보이도록
+    lsSet(lsDataKey(found.academyId, 'classes'), joined.classes);
+
+    const identity = { academyId: found.academyId, classId: found.classId, studentId: joined.studentId };
+    currentStudentCtx = identity;
+    lsSet('student_identity', identity);
+    showScreen('select');
+  } catch(e){
+    setGateStatus('서버 연결에 실패했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. (' + e.message + ')');
+  } finally {
+    gateStartBtn.disabled = false;
   }
-
-  const identity = { classId: cls.id, studentId: student.id };
-  currentStudentCtx = identity;
-  lsSet('student_identity', identity);
-  showScreen('select');
 });
 gateSkipBtn.addEventListener('click', () => {
   currentStudentCtx = null;
-  showScreen('select');
+  enterStudentMode();
 });
 switchStudentBtn.addEventListener('click', () => {
   currentStudentCtx = null;
@@ -1122,6 +1257,13 @@ function renderStudentView(){
         btn.addEventListener('click', () => loadProblem(btn.dataset.id));
       });
     }
+  } else if (currentStudentCtx){
+    // 반 정보가 아직 서버에서 안 왔거나, 선생님이 반/학생을 지운 경우
+    studentIdBar.style.display = 'flex';
+    studentIdLabel.textContent = '📚 반 정보를 불러오는 중…';
+    homeworkSection.classList.add('hidden');
+    toggleBrowseBtn.style.display = 'none';
+    browseSection.classList.remove('hidden');
   } else {
     studentIdBar.style.display = 'none';
     homeworkSection.classList.add('hidden');
@@ -1338,7 +1480,7 @@ document.getElementById('eraserBtn').addEventListener('click', () => {
 document.getElementById('clearBtn').addEventListener('click', drawProblemBackground);
 
 // ---------- 모드 전환 (화면 녹화 / 사진 채점) ----------
-const modeTabs = document.querySelectorAll('.mode-tab');
+const modeTabs = document.querySelectorAll('#modeTabs .mode-tab');
 const recordModeCard = document.getElementById('recordModeCard');
 const photoModeCard = document.getElementById('photoModeCard');
 
@@ -1700,8 +1842,10 @@ function setFormStatus(msg){
 const classDetailScreen = document.getElementById('classDetailScreen');
 const studentGateScreen = document.getElementById('studentGateScreen');
 const submissionDetailScreen = document.getElementById('submissionDetailScreen');
+const teacherLoginScreen = document.getElementById('teacherLoginScreen');
 
 function showScreen(name){
+  teacherLoginScreen.classList.add('hidden');
   selectScreen.classList.add('hidden');
   practiceScreen.classList.add('hidden');
   teacherScreen.classList.add('hidden');
@@ -1712,14 +1856,229 @@ function showScreen(name){
   if (name === 'gate'){ studentGateScreen.classList.remove('hidden'); populateGateSelects(); }
   if (name === 'select'){ selectScreen.classList.remove('hidden'); renderStudentView(); }
   if (name === 'practice') practiceScreen.classList.remove('hidden');
-  if (name === 'teacher'){ teacherScreen.classList.remove('hidden'); renderTeacherList(); renderClassList(); }
+  if (name === 'teacherLogin'){ teacherLoginScreen.classList.remove('hidden'); selectLoginTab('login'); }
+  if (name === 'teacher'){ teacherScreen.classList.remove('hidden'); renderAcademyBar(); renderTeacherList(); renderClassList(); }
   if (name === 'form') problemFormScreen.classList.remove('hidden');
   if (name === 'classDetail'){ classDetailScreen.classList.remove('hidden'); renderClassDetail(); }
   if (name === 'submissionDetail') submissionDetailScreen.classList.remove('hidden');
 }
 
-document.getElementById('teacherEntryBtn').addEventListener('click', () => showScreen('teacher'));
-document.getElementById('teacherBackBtn').addEventListener('click', () => showScreen('select'));
+// ============================================================
+// 선생님 계정(학원) 로그인
+// - Firebase Auth 이메일/비밀번호. 계정 1개 = 학원 1개 (학원ID = 계정 uid)
+// - Firebase를 못 쓰는 환경에선 로그인 없이 '이 기기' 학원(local)으로 동작
+// ============================================================
+let teacherAcademy = null; // { id, name, email }
+let pendingAcademyName = '';
+let loginTab = 'login';
+
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+const loginAcademyName = document.getElementById('loginAcademyName');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+const loginStatusMsg = document.getElementById('loginStatusMsg');
+
+function setLoginStatus(msg, ok){
+  if (!msg){ loginStatusMsg.classList.remove('show'); return; }
+  loginStatusMsg.textContent = msg;
+  loginStatusMsg.style.color = ok ? 'var(--green-dark)' : '';
+  loginStatusMsg.classList.add('show');
+}
+function authErrorMessage(e){
+  const map = {
+    'auth/invalid-email': '이메일 형식을 확인해 주세요.',
+    'auth/user-not-found': '이메일 또는 비밀번호가 맞지 않아요.',
+    'auth/wrong-password': '이메일 또는 비밀번호가 맞지 않아요.',
+    'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않아요.',
+    'auth/invalid-login-credentials': '이메일 또는 비밀번호가 맞지 않아요.',
+    'auth/email-already-in-use': '이미 등록된 이메일이에요. "로그인" 탭에서 로그인해 주세요.',
+    'auth/weak-password': '비밀번호는 6자 이상으로 정해 주세요.',
+    'auth/too-many-requests': '시도가 너무 많아요. 잠시 후 다시 해 주세요.',
+    'auth/network-request-failed': '인터넷 연결을 확인해 주세요.',
+    'auth/operation-not-allowed': 'Firebase 콘솔 > Authentication에서 "이메일/비밀번호" 로그인을 사용 설정해 주세요.'
+  };
+  return map[e.code] || ('로그인 중 문제가 생겼어요: ' + e.message);
+}
+
+function selectLoginTab(name){
+  loginTab = name;
+  document.querySelectorAll('#loginTabs .mode-tab').forEach(t => t.classList.toggle('active', t.dataset.loginTab === name));
+  document.getElementById('loginAcademyNameField').classList.toggle('hidden', name !== 'signup');
+  loginSubmitBtn.textContent = name === 'signup' ? '학원 등록하고 시작하기' : '로그인';
+  loginPassword.autocomplete = name === 'signup' ? 'new-password' : 'current-password';
+  setLoginStatus('');
+}
+document.querySelectorAll('#loginTabs .mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => selectLoginTab(tab.dataset.loginTab));
+});
+
+loginSubmitBtn.addEventListener('click', async () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+  const academyName = loginAcademyName.value.trim();
+  if (!email || !password){ setLoginStatus('이메일과 비밀번호를 입력해 주세요.'); return; }
+  if (loginTab === 'signup' && !academyName){ setLoginStatus('학원 이름을 입력해 주세요.'); return; }
+
+  loginSubmitBtn.disabled = true;
+  setLoginStatus('');
+  try {
+    if (loginTab === 'signup'){
+      pendingAcademyName = academyName;
+      await auth.createUserWithEmailAndPassword(email, password);
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+    loginPassword.value = '';
+    // 이후 처리는 onAuthStateChanged에서
+  } catch(e){
+    setLoginStatus(authErrorMessage(e));
+  } finally {
+    loginSubmitBtn.disabled = false;
+  }
+});
+
+document.getElementById('resetPwBtn').addEventListener('click', async () => {
+  const email = loginEmail.value.trim();
+  if (!email){ setLoginStatus('비밀번호를 재설정할 이메일을 위에 입력해 주세요.'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    setLoginStatus('비밀번호 재설정 메일을 보냈어요. 메일함을 확인해 주세요.', true);
+  } catch(e){
+    setLoginStatus(authErrorMessage(e));
+  }
+});
+
+// 학원 정보 문서(academies/{uid})를 읽고, 처음 로그인한 계정이면 만들어 줌
+async function loadTeacherAcademy(user){
+  const ref = db.collection('academies').doc(user.uid);
+  const snap = await ref.get();
+  let meta = snap.exists ? snap.data() : null;
+  if (!meta){
+    meta = {
+      name: pendingAcademyName || (user.email || '').split('@')[0] + ' 학원',
+      ownerUid: user.uid,
+      ownerEmail: user.email || '',
+      createdAt: Date.now()
+    };
+    await ref.set(meta);
+  }
+  pendingAcademyName = '';
+  return { id: user.uid, name: meta.name, email: user.email || '', legacyChecked: !!meta.legacyChecked };
+}
+
+function renderAcademyBar(){
+  if (!teacherAcademy) return;
+  document.getElementById('academyNameLabel').textContent = '🏫 ' + teacherAcademy.name;
+  document.getElementById('academyAccountLabel').textContent = teacherAcademy.id === LOCAL_ACADEMY
+    ? '서버 연결 없이 이 기기에만 저장돼요'
+    : teacherAcademy.email;
+  document.getElementById('logoutBtn').style.display = teacherAcademy.id === LOCAL_ACADEMY ? 'none' : '';
+}
+
+function isTeacherScreenVisible(){
+  return [teacherScreen, classDetailScreen, problemFormScreen, submissionDetailScreen]
+    .some(el => !el.classList.contains('hidden'));
+}
+
+function enterTeacherMode(){
+  setActiveAcademy(teacherAcademy.id);
+  showScreen('teacher');
+  maybeImportLegacyData();
+}
+
+// 학생 화면으로: 학생으로 참여 중이면 그 학원, 아니면(둘러보기) 로그인한 선생님 학원의 문제를 보여줌
+function enterStudentMode(){
+  const academyId = (currentStudentCtx && currentStudentCtx.academyId)
+    || (teacherAcademy && teacherAcademy.id)
+    || null;
+  setActiveAcademy(academyId);
+  showScreen('select');
+}
+
+document.getElementById('teacherEntryBtn').addEventListener('click', () => {
+  if (!authAvailable){
+    teacherAcademy = { id: LOCAL_ACADEMY, name: '우리 학원 (이 기기)', email: '' };
+    enterTeacherMode();
+  } else if (teacherAcademy){
+    enterTeacherMode();
+  } else {
+    showScreen('teacherLogin');
+  }
+});
+document.getElementById('teacherBackBtn').addEventListener('click', enterStudentMode);
+document.getElementById('loginBackBtn').addEventListener('click', enterStudentMode);
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm('로그아웃할까요?')) return;
+  try { await auth.signOut(); } catch(e){ console.warn('로그아웃 실패:', e.message); }
+});
+
+if (authAvailable){
+  auth.onAuthStateChanged(async (user) => {
+    if (!user){
+      teacherAcademy = null;
+      if (isTeacherScreenVisible()) enterStudentMode();
+      return;
+    }
+    try {
+      teacherAcademy = await loadTeacherAcademy(user);
+    } catch(e){
+      teacherAcademy = null;
+      setLoginStatus('학원 정보를 불러오지 못했어요: ' + e.message + ' (Firestore 보안 규칙을 확인해 주세요)');
+      return;
+    }
+    if (!teacherLoginScreen.classList.contains('hidden')) enterTeacherMode();
+    else if (isTeacherScreenVisible()) renderAcademyBar();
+  });
+}
+
+// ============================================================
+// 예전 데이터 가져오기 (학원 분리 전에 이 브라우저에 저장된 academy_* 키)
+// 새 학원 계정이 비어 있을 때 한 번만 물어봄
+// ============================================================
+async function maybeImportLegacyData(){
+  if (!teacherAcademy || !isCloudAcademy(teacherAcademy.id) || teacherAcademy.legacyChecked) return;
+  const academyId = teacherAcademy.id;
+  const markChecked = () => {
+    teacherAcademy.legacyChecked = true;
+    db.collection('academies').doc(academyId).set({ legacyChecked: true }, { merge: true })
+      .catch(e => console.warn('가져오기 확인 표시 저장 실패:', e.message));
+  };
+
+  try {
+    // 이 학원에 이미 데이터가 있으면 묻지 않음
+    const [ownClasses, ownProblems] = await Promise.all([
+      academyDataRef(academyId, 'classes').get(),
+      academyDataRef(academyId, 'customProblems').get()
+    ]);
+    if ((ownClasses.exists && (ownClasses.data().list || []).length) ||
+        (ownProblems.exists && (ownProblems.data().list || []).length)){
+      markChecked();
+      return;
+    }
+
+    // 서버의 예전 공용 컬렉션('academy')은 다른 학원 계정도 읽을 수 있어서 가져오기 원본으로 쓰지 않음.
+    // 예전 버전은 서버 내용을 이 브라우저에도 그대로 저장해 뒀으므로, 원래 쓰던 기기에서 로그인하면 가져올 수 있음
+    const legacy = {};
+    Object.keys(DATA_DOCS).forEach(name => { legacy[name] = lsGet(lsDataKey(LOCAL_ACADEMY, name), []); });
+    if (!legacy.classes.length && !legacy.customProblems.length) return; // 이 기기엔 예전 데이터 없음 - 예전 기기에서 로그인하면 그때 물어봄
+
+    const ok = confirm(`학원 계정을 만들기 전에 쓰던 데이터가 있어요.\n반 ${legacy.classes.length}개, 직접 만든 문제 ${legacy.customProblems.length}개, 제출물 ${legacy.submissions.length}개를\n"${teacherAcademy.name}" 계정으로 가져올까요?`);
+    markChecked();
+    if (!ok || activeAcademyId !== academyId) return;
+
+    for (const cls of legacy.classes){
+      await registerInviteCode(cls, legacy.classes);
+    }
+    Object.keys(DATA_DOCS).forEach(name => {
+      if (name === 'submissions') saveSubmissions(legacy[name]);
+      else saveData(name, legacy[name]);
+    });
+    refreshCurrentScreen();
+    alert('가져오기가 끝났어요. 학생들은 기존 초대코드로 다시 들어오면 돼요. (코드가 겹쳐서 바뀐 반은 반 상세에서 새 코드를 확인해 주세요)');
+  } catch(e){
+    console.warn('예전 데이터 확인 실패:', e.message);
+  }
+}
 document.getElementById('formBackBtn').addEventListener('click', () => showScreen('teacher'));
 
 // ---- 교사모드 내부 탭 (문제 관리 / 반 관리) ----
@@ -1762,12 +2121,46 @@ function generateInviteCode(existingClasses){
   return code;
 }
 
-document.getElementById('addClassBtn').addEventListener('click', () => {
+// 반에 초대코드를 정해 주고, 서버 색인(inviteCodes/{코드})에 "이 코드 = 이 학원의 이 반"으로 등록.
+// 초대코드는 모든 학원에서 겹치면 안 되므로, 다른 학원이 쓰는 코드면 새로 뽑음.
+// 기존 코드가 있으면 가능한 한 그대로 유지. (서버를 못 쓰면 이 기기 안에서만 겹치지 않게)
+async function registerInviteCode(cls, existingClasses){
+  if (!isCloudAcademy(activeAcademyId)){
+    if (!cls.inviteCode) cls.inviteCode = generateInviteCode(existingClasses);
+    return;
+  }
+  const academyId = activeAcademyId;
+  for (let attempt = 0; attempt < 10; attempt++){
+    const code = (attempt === 0 && cls.inviteCode) ? cls.inviteCode : generateInviteCode(existingClasses);
+    const ref = db.collection('inviteCodes').doc(code);
+    const claimed = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (snap.exists){
+        const d = snap.data();
+        if (d.academyId !== academyId || d.classId !== cls.id) return false;
+      }
+      tx.set(ref, { academyId, classId: cls.id, createdAt: Date.now() });
+      return true;
+    });
+    if (claimed){ cls.inviteCode = code; return; }
+  }
+  throw new Error('초대코드를 만들지 못했어요. 잠시 후 다시 시도해 주세요.');
+}
+
+document.getElementById('addClassBtn').addEventListener('click', async () => {
   const name = prompt('반 이름을 입력해 주세요 (예: 화목 5시반)');
   if (!name || !name.trim()) return;
   const classes = loadClasses();
-  classes.push({ id: 'class-' + Date.now(), name: name.trim(), inviteCode: generateInviteCode(classes), students: [], homework: [] });
-  saveClasses(classes);
+  const cls = { id: 'class-' + Date.now(), name: name.trim(), inviteCode: '', students: [], homework: [] };
+  try {
+    await registerInviteCode(cls, classes);
+  } catch(e){
+    alert('반을 만들지 못했어요: ' + e.message);
+    return;
+  }
+  const latest = loadClasses(); // 코드 등록하는 동안 서버에서 바뀌었을 수 있으니 최신 목록에 추가
+  latest.push(cls);
+  saveClasses(latest);
   renderClassList();
 });
 
@@ -1797,12 +2190,12 @@ function openClassDetail(classId){
   currentClassId = classId;
   const classes = loadClasses();
   const cls = classes.find(c => c.id === classId);
-  if (cls && !cls.inviteCode){
-    cls.inviteCode = generateInviteCode(classes);
-    saveClasses(classes);
-  }
   showScreen('classDetail');
-  renderClassDetail();
+  if (cls && !cls.inviteCode){
+    registerInviteCode(cls, classes)
+      .then(() => { saveClasses(loadClasses()); renderClassDetail(); })
+      .catch(e => alert('초대코드를 만들지 못했어요: ' + e.message));
+  }
 }
 document.getElementById('classDetailBackBtn').addEventListener('click', () => showScreen('teacher'));
 
@@ -2166,41 +2559,28 @@ function setFbStatus(connected, msg){
   }
 }
 
-if (fbAvailable){
-  FS_DOC('customProblems').onSnapshot(
-    (doc) => { if (doc.exists){ customProblemsCache = doc.data().list || []; lsSet('academy_custom_problems', customProblemsCache); } setFbStatus(true); refreshCurrentScreen(); },
-    (err) => { setFbStatus(false, err.message); }
-  );
-  FS_DOC('hiddenBase').onSnapshot(
-    (doc) => { if (doc.exists){ hiddenBaseCache = doc.data().list || []; lsSet('academy_hidden_base_ids', hiddenBaseCache); } setFbStatus(true); refreshCurrentScreen(); },
-    (err) => { setFbStatus(false, err.message); }
-  );
-  FS_DOC('classes').onSnapshot(
-    (doc) => { if (doc.exists){ classesCache = doc.data().list || []; lsSet('academy_classes', classesCache); } setFbStatus(true); refreshCurrentScreen(); },
-    (err) => { setFbStatus(false, err.message); }
-  );
-  FS_DOC('completions').onSnapshot(
-    (doc) => { if (doc.exists){ completionsCache = doc.data().list || []; lsSet('academy_completions', completionsCache); } setFbStatus(true); refreshCurrentScreen(); },
-    (err) => { setFbStatus(false, err.message); }
-  );
-  FS_DOC('submissions').onSnapshot(
-    (doc) => { if (doc.exists){ submissionsCache = doc.data().list || []; lsSet('academy_submissions', submissionsCache); } setFbStatus(true); refreshCurrentScreen(); },
-    (err) => { setFbStatus(false, err.message); }
-  );
-}
-
 // ============================================================
 // 앱 시작 시 초기 화면 결정
 // - 저장된 학생 신원이 있고 그 반/학생이 실제로 존재하면 바로 숙제 화면으로
 // - 없으면 반/이름 선택 화면(게이트)부터
 // ============================================================
 (function initialRoute(){
+  if (currentStudentCtx && !currentStudentCtx.academyId){
+    // 학원 분리 전에 저장된 신원: 서버를 못 쓰는 환경이면 이 기기 학원으로 이어서 쓰고,
+    // 서버를 쓰는 환경이면 초대코드로 다시 들어오게 함(선생님이 학원 계정으로 데이터를 옮겼을 수 있어서)
+    if (fbAvailable) currentStudentCtx = null;
+    else currentStudentCtx = { ...currentStudentCtx, academyId: LOCAL_ACADEMY };
+    lsSet('student_identity', currentStudentCtx);
+  }
   if (currentStudentCtx){
+    setActiveAcademy(currentStudentCtx.academyId);
+    if (isCloudAcademy(currentStudentCtx.academyId)){ showScreen('select'); return; } // 반 정보는 서버 구독으로 도착
     const cls = loadClasses().find(c => c.id === currentStudentCtx.classId);
     const stu = cls && (cls.students||[]).find(s => s.id === currentStudentCtx.studentId);
     if (cls && stu){ showScreen('select'); return; }
     currentStudentCtx = null;
     lsSet('student_identity', null);
+    setActiveAcademy(null);
   }
   showScreen('gate');
 })();

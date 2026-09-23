@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// 말하는 서술형 수학 노트 - Storage 보안 규칙 (Blaze 요금제로 Storage를 켠 경우)
+// Firebase 콘솔 > Storage > 규칙 탭에 붙여넣고 "게시"하세요.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /academies/{academyId}/submissions/{allPaths=**} {
+      // 학생이 올린 직후 다운로드 URL을 받아야 해서 개별 파일 읽기는 허용, 목록 조회는 선생님만
+      allow get: if true;
+      allow list: if request.auth != null && request.auth.uid == academyId;
+      // 녹화 영상/사진만, 50MB 이하
+      allow create: if request.resource.size < 50 * 1024 * 1024
+                    && (request.resource.contentType.matches('video/.*')
+                        || request.resource.contentType.matches('image/.*'));
+      allow delete: if request.auth != null && request.auth.uid == academyId;
+    }
+  }
+}
