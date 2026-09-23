@@ -1,0 +1,60 @@
+import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
+import { readFileSync } from 'fs';
+import { doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+
+const env = await initializeTestEnvironment({ projectId: 'demo-mathspeak', firestore: { rules: readFileSync('../firestore.rules', 'utf8'), host: '127.0.0.1', port: 8085 } });
+await env.withSecurityRulesDisabled(async ctx => {
+  const db = ctx.firestore();
+  await setDoc(doc(db, 'academies/teacherA'), { name: 'A' });
+  await setDoc(doc(db, 'academies/teacherA/data/classes'), { list: [{ id: 'c1', name: '반1', students: [] }] });
+  await setDoc(doc(db, 'inviteCodes/111111'), { academyId: 'teacherA', classId: 'c1' });
+  await setDoc(doc(db, 'inviteCodes/222222'), { academyId: 'teacherB', classId: 'cB' });
+  await setDoc(doc(db, 'academies/teacherA/submissions/other'), { classId: 'c1', studentId: 'x', uid: 'other' });
+});
+const teacherA = env.authenticatedContext('teacherA').firestore();
+const teacherB = env.authenticatedContext('teacherB').firestore();
+const stu = env.authenticatedContext('anon1', { firebase: { sign_in_provider: 'anonymous' } }).firestore();
+const stranger = env.authenticatedContext('anon2', { firebase: { sign_in_provider: 'anonymous' } }).firestore();
+const nobody = env.unauthenticatedContext().firestore();
+const results = [];
+async function t(name, p){ try { await p; results.push(['PASS', name]); } catch(e){ results.push(['FAIL', name, e.message]); } }
+const member = { classId: 'c1', studentId: 's1', name: '영희', inviteCode: '111111', joinedAt: 1 };
+
+await t('비로그인은 반 목록 못 읽음', assertFails(getDoc(doc(nobody, 'academies/teacherA/data/classes'))));
+await t('학생(익명)은 반 목록 읽기 가능', assertSucceeds(getDoc(doc(stu, 'academies/teacherA/data/classes'))));
+await t('학생은 반 목록 수정 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/data/classes'), { list: [] })));
+await t('다른 학원 선생님은 반 목록 수정 불가', assertFails(setDoc(doc(teacherB, 'academies/teacherA/data/classes'), { list: [] })));
+await t('선생님은 자기 반 목록 수정 가능', assertSucceeds(setDoc(doc(teacherA, 'academies/teacherA/data/classes'), { list: [{ id: 'c1', name: '반1', students: [] }] })));
+await t('초대코드 조회는 누구나', assertSucceeds(getDoc(doc(nobody, 'inviteCodes/111111'))));
+await t('초대코드 목록 훑기 불가', assertFails(getDocs(collection(nobody, 'inviteCodes'))));
+await t('틀린 초대코드로 등록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/members/anon1'), { ...member, inviteCode: '999999' })));
+await t('다른 학원 코드로 등록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/members/anon1'), { ...member, inviteCode: '222222' })));
+await t('코드와 반이 다르면 등록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/members/anon1'), { ...member, classId: 'c2' })));
+await t('남의 uid로 등록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/members/anon2'), member)));
+await t('이상한 필드 추가 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/members/anon1'), { ...member, role: 'teacher' })));
+await t('등록 전엔 완료기록 못 씀', assertFails(setDoc(doc(stu, 'academies/teacherA/completions/c1__s1__p1'), { classId: 'c1', studentId: 's1', problemId: 'p1', uid: 'anon1' })));
+await t('올바른 코드로 등록 가능', assertSucceeds(setDoc(doc(stu, 'academies/teacherA/members/anon1'), member)));
+await t('자기 완료기록 쓰기 가능', assertSucceeds(setDoc(doc(stu, 'academies/teacherA/completions/c1__s1__p1'), { classId: 'c1', studentId: 's1', problemId: 'p1', completedAt: 1, uid: 'anon1' })));
+await t('다른 학생 ID로 완료기록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/completions/c1__s9__p1'), { classId: 'c1', studentId: 's9', problemId: 'p1', uid: 'anon1' })));
+await t('남의 uid로 완료기록 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/completions/x'), { classId: 'c1', studentId: 's1', problemId: 'p2', uid: 'someone' })));
+await t('학생은 완료기록 조회(내 것) 가능', assertSucceeds(getDocs(query(collection(stu, 'academies/teacherA/completions'), where('studentId', '==', 's1')))));
+await t('등록 안 한 기기는 완료기록 조회 불가', assertFails(getDocs(query(collection(stranger, 'academies/teacherA/completions'), where('studentId', '==', 's1')))));
+await t('자기 제출물 쓰기 가능', assertSucceeds(setDoc(doc(stu, 'academies/teacherA/submissions/sub-1'), { id: 'sub-1', classId: 'c1', studentId: 's1', problemId: 'p1', submittedAt: 1, uid: 'anon1' })));
+await t('학생은 제출물 못 읽음', assertFails(getDoc(doc(stu, 'academies/teacherA/submissions/sub-1'))));
+await t('학생은 남의 제출물 덮어쓰기 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/submissions/other'), { classId: 'c1', studentId: 's1', uid: 'anon1' })));
+await t('등록 안 한 기기는 제출 불가', assertFails(setDoc(doc(stranger, 'academies/teacherA/submissions/sub-2'), { classId: 'c1', studentId: 's1', uid: 'anon2' })));
+await t('선생님은 제출함 조회 가능', assertSucceeds(getDocs(collection(teacherA, 'academies/teacherA/submissions'))));
+await t('다른 학원 선생님은 제출함 조회 불가', assertFails(getDocs(collection(teacherB, 'academies/teacherA/submissions'))));
+await t('학생은 학생 등록 목록 못 봄', assertFails(getDocs(collection(stu, 'academies/teacherA/members'))));
+await t('선생님은 학생 등록 목록 조회', assertSucceeds(getDocs(collection(teacherA, 'academies/teacherA/members'))));
+await t('선생님은 학생 등록 삭제 가능', assertSucceeds(deleteDoc(doc(teacherA, 'academies/teacherA/members/anon1'))));
+await t('삭제된 학생은 제출 불가', assertFails(setDoc(doc(stu, 'academies/teacherA/submissions/sub-3'), { classId: 'c1', studentId: 's1', uid: 'anon1' })));
+await t('학생은 학원 정보 못 읽음', assertFails(getDoc(doc(stu, 'academies/teacherA'))));
+await t('선생님 초대코드 등록(자기 학원)', assertSucceeds(setDoc(doc(teacherA, 'inviteCodes/333333'), { academyId: 'teacherA', classId: 'c3' })));
+await t('남의 학원으로 초대코드 등록 불가', assertFails(setDoc(doc(teacherA, 'inviteCodes/444444'), { academyId: 'teacherB', classId: 'c3' })));
+await t('남의 초대코드 가로채기 불가', assertFails(setDoc(doc(teacherA, 'inviteCodes/222222'), { academyId: 'teacherA', classId: 'c1' })));
+await t('예전 공용 컬렉션 차단', assertFails(getDoc(doc(teacherA, 'academy/classes'))));
+
+for (const r of results) console.log(r.join(' | '));
+console.log(results.filter(r => r[0] === 'FAIL').length ? 'SOME FAILED' : `ALL ${results.length} RULE TESTS PASSED`);
+await env.cleanup();

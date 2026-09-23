@@ -1,41 +1,80 @@
 rules_version = '2';
 
-// 말하는 서술형 수학 노트 - Firestore 보안 규칙 (학원별 데이터 분리 버전)
+// 말하는 서술형 수학 노트 - Firestore 보안 규칙 (학원별 분리 + 학생 익명 로그인)
 // Firebase 콘솔 > Firestore Database > 규칙 탭에 그대로 붙여넣고 "게시"하세요.
+// (Authentication > 로그인 방법에서 "이메일/비밀번호"와 "익명"을 둘 다 사용 설정해야 합니다)
 //
 // 구조
-//   academies/{academyId}                 학원 정보 (academyId = 선생님 계정 uid)
-//   academies/{academyId}/data/{docName}  classes, customProblems, hiddenBase, completions, submissions
-//   inviteCodes/{code}                    초대코드 → { academyId, classId }
-//
-// 주의: 학생은 아직 로그인이 없어서, 학생이 써야 하는 문서(classes/completions/submissions)는
-//       초대코드로 학원 ID를 알아낸 사람이면 쓸 수 있습니다. (다음 단계: 학생 익명 로그인으로 강화)
+//   academies/{academyId}                      학원 정보 (academyId = 선생님 계정 uid)
+//   academies/{academyId}/data/{docName}       customProblems, hiddenBase, classes  ← 선생님만 수정
+//   academies/{academyId}/members/{uid}        학생 기기 등록 {classId, studentId, name, inviteCode}
+//   academies/{academyId}/completions/{id}     숙제 완료 1건 = 문서 1개
+//   academies/{academyId}/submissions/{id}     제출물 1건 = 문서 1개
+//   inviteCodes/{code}                         초대코드 → { academyId, classId }
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
     function isOwner(academyId) {
-      return request.auth != null && request.auth.uid == academyId;
+      return signedIn() && request.auth.uid == academyId;
+    }
+    function memberPath(academyId) {
+      return /databases/$(database)/documents/academies/$(academyId)/members/$(request.auth.uid);
+    }
+    function isMember(academyId) {
+      return signedIn() && exists(memberPath(academyId));
+    }
+    // 학생이 쓰는 기록이 "자기 반, 자기 학생 ID, 자기 uid"인지 확인
+    function isOwnRecord(academyId) {
+      let m = get(memberPath(academyId)).data;
+      return request.resource.data.classId == m.classId
+          && request.resource.data.studentId == m.studentId
+          && request.resource.data.uid == request.auth.uid;
     }
 
     match /academies/{academyId} {
       allow read, write: if isOwner(academyId);
 
       match /data/{docName} {
-        // 학생 화면에서도 문제·반·숙제를 읽어야 하므로 읽기는 허용
-        allow read: if true;
-        // 문제은행/숨김 목록은 선생님만, 반 명단·완료기록·제출함은 학생도 씀
-        allow write: if isOwner(academyId)
-                     || docName in ['classes', 'completions', 'submissions'];
+        // 학생 기기(익명 로그인)도 문제·반·숙제를 읽어야 함
+        allow read: if signedIn();
+        allow write: if isOwner(academyId);
+      }
+
+      match /members/{uid} {
+        allow read: if isOwner(academyId) || (signedIn() && request.auth.uid == uid);
+        // 초대코드가 실제로 이 학원의 이 반 것일 때만 등록 가능
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['classId', 'studentId', 'name', 'inviteCode', 'joinedAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
+          && request.resource.data.studentId is string && request.resource.data.studentId.size() <= 40
+          && request.resource.data.inviteCode is string
+          && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.inviteCode)).data.academyId == academyId
+          && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.inviteCode)).data.classId == request.resource.data.classId;
+        allow delete: if isOwner(academyId) || (signedIn() && request.auth.uid == uid);
+      }
+
+      match /completions/{id} {
+        allow read: if isOwner(academyId) || isMember(academyId);
+        allow create, update: if isOwner(academyId) || (isMember(academyId) && isOwnRecord(academyId));
+        allow delete: if isOwner(academyId);
+      }
+
+      match /submissions/{id} {
+        // 제출물은 선생님만 볼 수 있음 (학생끼리 서로의 답안을 못 봄)
+        allow read, update, delete: if isOwner(academyId);
+        allow create: if isOwner(academyId) || (isMember(academyId) && isOwnRecord(academyId));
       }
     }
 
     match /inviteCodes/{code} {
       allow get: if true;          // 코드를 아는 사람만 조회 가능
       allow list: if false;        // 전체 코드 목록 훑어보기는 금지
-      allow create: if request.auth != null
-                    && request.resource.data.academyId == request.auth.uid;
-      allow update, delete: if request.auth != null
-                    && resource.data.academyId == request.auth.uid
+      allow create: if signedIn() && request.resource.data.academyId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.academyId == request.auth.uid
                     && (!('academyId' in request.resource.data) || request.resource.data.academyId == request.auth.uid);
     }
 

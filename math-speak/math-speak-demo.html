@@ -735,9 +735,40 @@ try {
 const LOCAL_ACADEMY = 'local';
 let activeAcademyId = null; // 지금 화면이 보고 있는 학원. null이면(초대코드 없이 둘러보기) 기본 문제만 보이고 아무것도 저장 안 함
 
-function isCloudAcademy(academyId){ return fbAvailable && !!academyId && academyId !== LOCAL_ACADEMY; }
+let activeRole = 'browse';  // 'teacher' | 'student' | 'browse' - 역할에 따라 구독하는 데이터가 다름
+let activeKey = null;
+
+function cloudEnabled(){ return fbAvailable && authAvailable; }
+function isCloudAcademy(academyId){ return cloudEnabled() && !!academyId && academyId !== LOCAL_ACADEMY; }
 function academyDataRef(academyId, name){ return db.collection('academies').doc(academyId).collection('data').doc(name); }
+function academyColl(academyId, name){ return db.collection('academies').doc(academyId).collection(name); }
+function memberRef(academyId, uid){ return academyColl(academyId, 'members').doc(uid); }
 function FS_DOC(name){ return isCloudAcademy(activeAcademyId) ? academyDataRef(activeAcademyId, name) : null; }
+
+// ---- 로그인 준비 ----
+// 선생님은 이메일 계정, 학생은 익명 계정(기기마다 자동 발급)으로 서버에 접속함.
+// 보안 규칙이 "누가 쓰는지"를 확인할 수 있도록, 서버에 읽고 쓰기 전에 항상 로그인 상태를 만들어 둠
+let resolveAuthInit;
+const authInit = new Promise(r => { resolveAuthInit = r; });
+if (!authAvailable) resolveAuthInit();
+
+async function ensureSignedIn(){
+  await authInit;
+  if (auth.currentUser) return auth.currentUser;
+  const cred = await auth.signInAnonymously();
+  return cred.user;
+}
+function currentUid(){ return (authAvailable && auth.currentUser) ? auth.currentUser.uid : null; }
+function serverErrorMessage(e){
+  const code = (e && e.code) || '';
+  if (code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation')
+    return 'Firebase 콘솔 > Authentication에서 "익명" 로그인을 사용 설정해야 학생이 들어올 수 있어요.';
+  if (code === 'auth/network-request-failed' || code === 'unavailable')
+    return '인터넷 연결을 확인하고 다시 시도해 주세요.';
+  if (code === 'permission-denied')
+    return '권한이 없어요. 초대코드를 다시 확인하거나, 선생님께 보안 규칙 게시 여부를 여쭤봐 주세요.';
+  return '서버 연결에 실패했어요. (' + ((e && e.message) || e) + ')';
+}
 
 // Blob/File을 Storage에 올리고 다운로드 URL을 돌려줌. 실패하면(요금제 미전환 등) null 반환 - 호출부에서 항상 대비해야 함
 async function uploadToStorage(blob, path){
@@ -909,10 +940,17 @@ const DATA_DOCS = {
   completions: 'completions',
   submissions: 'submissions'
 };
+// 선생님만 고치는 목록: 서버에선 academies/{학원ID}/data/{이름} 문서 하나에 {list:[...]}
+const SHARED_DOCS = ['customProblems', 'hiddenBase', 'classes'];
+// 학생이 쌓는 기록(완료·제출): 서버에선 academies/{학원ID}/{completions|submissions}/{기록ID} 1건 = 문서 1개
+//   → 여러 학생이 동시에 내도 서로 덮어쓰지 않고, 규칙으로 "자기 기록만" 쓰게 제한할 수 있음
+// (서버를 못 쓰는 이 기기 학원에서는 예전처럼 배열로 저장)
+const MAX_CLOUD_SUBMISSIONS = 300; // 선생님 제출함에 불러오는 최근 제출 수
+
 function lsDataKey(academyId, name){
   return academyId === LOCAL_ACADEMY ? `academy_${DATA_DOCS[name]}` : `ac_${academyId}_${DATA_DOCS[name]}`;
 }
-const dataCache = { customProblems:[], hiddenBase:[], classes:[], completions:[], submissions:[] };
+const dataCache = { customProblems:[], hiddenBase:[], classes:[], completions:[], submissions:[], members:[] };
 let academyUnsubscribers = [];
 
 function syncToFirestore(name, list){
@@ -927,31 +965,52 @@ function saveData(name, list){
   syncToFirestore(name, list);
 }
 
-// 보고 있는 학원을 바꿈: 캐시를 그 학원 것으로 갈아끼우고, 서버 실시간 구독도 그 학원으로 옮김
-function setActiveAcademy(academyId){
-  if (academyId === activeAcademyId) return;
+// 보고 있는 학원/역할을 바꿈: 캐시를 그 학원 것으로 갈아끼우고, 서버 실시간 구독도 옮김
+//  - teacher: 반·문제 + 모든 완료기록 + 제출함 + 학생 등록(members)
+//  - student: 반·문제 + 내 완료기록
+//  - browse : 반·문제만
+function setActiveAcademy(academyId, role, studentId){
+  const key = academyId ? `${academyId}|${role || 'browse'}|${studentId || ''}` : null;
+  if (key === activeKey) return;
   academyUnsubscribers.forEach(unsub => { try { unsub(); } catch(e){} });
   academyUnsubscribers = [];
+  activeKey = key;
   activeAcademyId = academyId || null;
+  activeRole = role || 'browse';
   Object.keys(DATA_DOCS).forEach(name => {
     dataCache[name] = activeAcademyId ? lsGet(lsDataKey(activeAcademyId, name), []) : [];
   });
+  dataCache.members = [];
   if (!isCloudAcademy(activeAcademyId)) return;
-  const subscribedId = activeAcademyId;
-  Object.keys(DATA_DOCS).forEach(name => {
-    academyUnsubscribers.push(academyDataRef(subscribedId, name).onSnapshot(
-      (doc) => {
-        if (activeAcademyId !== subscribedId) return;
-        if (doc.exists){
-          dataCache[name] = doc.data().list || [];
-          lsSet(lsDataKey(subscribedId, name), dataCache[name]);
-        }
-        setFbStatus(true);
-        refreshCurrentScreen();
-      },
-      (err) => { setFbStatus(false, err.message); }
-    ));
-  });
+
+  const myKey = key;
+  const onError = (err) => { if (activeKey === myKey) setFbStatus(false, err.message); };
+  const apply = (name, list, persist) => {
+    if (activeKey !== myKey) return;
+    if (list){
+      dataCache[name] = list;
+      if (persist) lsSet(lsDataKey(academyId, name), list);
+    }
+    setFbStatus(true);
+    refreshCurrentScreen();
+  };
+  const listen = (query, onSnap) => academyUnsubscribers.push(query.onSnapshot(onSnap, onError));
+
+  ensureSignedIn().then(() => {
+    if (activeKey !== myKey) return;
+    SHARED_DOCS.forEach(name => {
+      listen(academyDataRef(academyId, name), doc => apply(name, doc.exists ? (doc.data().list || []) : null, true));
+    });
+    const completions = academyColl(academyId, 'completions');
+    if (activeRole === 'teacher'){
+      listen(completions, qs => apply('completions', qs.docs.map(d => d.data()), true));
+      listen(academyColl(academyId, 'submissions').orderBy('submittedAt', 'desc').limit(MAX_CLOUD_SUBMISSIONS),
+        qs => apply('submissions', qs.docs.map(d => d.data()), false));
+      listen(academyColl(academyId, 'members'), qs => apply('members', qs.docs.map(d => ({ uid: d.id, ...d.data() })), false));
+    } else if (activeRole === 'student' && studentId){
+      listen(completions.where('studentId', '==', studentId), qs => apply('completions', qs.docs.map(d => d.data()), true));
+    }
+  }).catch(e => { if (activeKey === myKey) setFbStatus(false, serverErrorMessage(e)); });
 }
 
 function loadCustomProblems(){ return dataCache.customProblems; }
@@ -963,20 +1022,38 @@ function saveHiddenBaseIds(list){ saveData('hiddenBase', list); }
 function loadClasses(){ return dataCache.classes; }
 function saveClasses(list){ saveData('classes', list); }
 function loadCompletions(){ return dataCache.completions; }
-function saveCompletions(list){ saveData('completions', list); }
+function completionDocId(c){ return `${c.classId}__${c.studentId}__${c.problemId}`; }
+
+// 반 명단 = 선생님이 직접 넣은 학생 + 초대코드로 들어온 학생(members). 같은 학생 ID는 한 번만
+function getClassStudents(cls){
+  const list = [...(cls.students || [])];
+  dataCache.members
+    .filter(m => m.classId === cls.id)
+    .forEach(m => { if (!list.some(s => s.id === m.studentId)) list.push({ id: m.studentId, name: m.name }); });
+  return list;
+}
 
 // ---- 제출함 (학생이 낸 답안 스냅샷 + AI 피드백 기록) ----
-const MAX_SUBMISSIONS = 150; // Storage 업로드 성공 시엔 URL만 저장돼서 여유가 있지만, 업로드 실패시 썸네일(base64)이 쌓이는 걸 대비한 안전 상한
+const MAX_SUBMISSIONS = 150; // 이 기기 학원(배열 저장)에서 썸네일(base64)이 쌓이는 걸 대비한 안전 상한
 
 function loadSubmissions(){ return dataCache.submissions; }
-function saveSubmissions(list){
-  // 최신 것부터 MAX_SUBMISSIONS개까지만 유지 (썸네일이 쌓이면 문서 용량 한도를 넘을 수 있어서)
-  saveData('submissions', list.slice(-MAX_SUBMISSIONS));
+
+// 완료기록/제출물 1건 추가. 서버에선 문서 1개로 저장하면서 내 uid를 붙임(보안 규칙이 본인 기록인지 확인)
+function addRecord(name, entry, docId){
+  if (!activeAcademyId) return Promise.resolve();
+  if (isCloudAcademy(activeAcademyId)){
+    dataCache[name] = [...dataCache[name], entry]; // 서버 응답 전에도 화면에 바로 반영
+    return academyColl(activeAcademyId, name).doc(docId).set({ ...entry, uid: currentUid() })
+      .catch(e => console.warn('서버 저장 실패:', e.message));
+  }
+  let list = [...dataCache[name], entry];
+  if (name === 'submissions') list = list.slice(-MAX_SUBMISSIONS);
+  saveData(name, list);
+  return Promise.resolve();
 }
 function recordSubmission(entry){
-  const list = loadSubmissions();
-  list.push({ id: 'sub-' + Date.now(), submittedAt: Date.now(), ...entry });
-  saveSubmissions(list);
+  const sub = { id: 'sub-' + Date.now(), submittedAt: Date.now(), ...entry };
+  return addRecord('submissions', sub, sub.id);
 }
 // 이미지(또는 캔버스)를 작게 압축한 JPEG data URL로 변환 - Firestore 문서 용량을 아끼기 위함
 function makeThumbnail(sourceCanvas, maxWidth){
@@ -1004,7 +1081,7 @@ async function submitRecordSubmission(aiEnabled, feedbackText){
   if (!currentStudentCtx) return;
   markHomeworkDone(currentStudentCtx.classId, currentStudentCtx.studentId, currentProblem.id);
   const ts = Date.now();
-  const base = `academies/${activeAcademyId}/submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
+  const base = `academies/${activeAcademyId}/submissions/${currentUid() || 'local'}/${ts}`;
   let snapshotBlob = null;
   try { snapshotBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.6)); } catch(e){}
   const [videoUrl, snapshotUrl] = await Promise.all([
@@ -1024,7 +1101,7 @@ async function submitPhotoSubmission(aiEnabled, feedbackText){
   if (!currentStudentCtx) return;
   markHomeworkDone(currentStudentCtx.classId, currentStudentCtx.studentId, currentProblem.id);
   const ts = Date.now();
-  const base = `academies/${activeAcademyId}/submissions/${currentStudentCtx.classId}/${currentStudentCtx.studentId}/${ts}`;
+  const base = `academies/${activeAcademyId}/submissions/${currentUid() || 'local'}/${ts}`;
   const photoUrl = await uploadToStorage(photoFile, base + '.jpg');
   const fallbackThumb = photoUrl ? null : await fileToThumbnail(photoFile, 320).catch(() => null);
   recordSubmission({
@@ -1040,10 +1117,9 @@ function isHomeworkDone(classId, studentId, problemId){
 }
 function markHomeworkDone(classId, studentId, problemId){
   if (!classId || !studentId) return;
-  const list = loadCompletions();
-  if (list.some(c => c.classId===classId && c.studentId===studentId && c.problemId===problemId)) return;
-  list.push({ classId, studentId, problemId, completedAt: Date.now() });
-  saveCompletions(list);
+  if (isHomeworkDone(classId, studentId, problemId)) return;
+  const entry = { classId, studentId, problemId, completedAt: Date.now() };
+  addRecord('completions', entry, completionDocId(entry));
 }
 function isAiGradingEnabled(){
   if (!currentStudentCtx) return true; // 반 소속이 아니면(자유 학습) 기본적으로 AI 채점 사용
@@ -1131,7 +1207,7 @@ function setGateStatus(msg){
 }
 // 초대코드 → { academyId, classId }. 서버 색인(inviteCodes)을 먼저 보고, 없으면 이 기기(오프라인 학원)에서 찾음
 async function findClassByInviteCode(code){
-  if (fbAvailable){
+  if (cloudEnabled()){
     try {
       const snap = await db.collection('inviteCodes').doc(code).get();
       if (snap.exists){
@@ -1146,45 +1222,73 @@ async function findClassByInviteCode(code){
   return local ? { academyId: LOCAL_ACADEMY, classId: local.id } : null;
 }
 
-// 반에 학생을 찾아 넣음(이름이 같으면 기존 학생으로 로그인). 여러 학생이 동시에 들어와도
-// 명단이 덮어써지지 않도록 서버에서는 트랜잭션으로 처리. 반환: { studentId, classes } 또는 null
-async function joinClass(academyId, classId, name){
-  const findOrAdd = (classes) => {
+// 이름 → 반 안에서 항상 같은 학생 ID. 같은 이름으로 여러 기기에서 들어와도 한 학생으로 묶임
+function studentIdForName(classId, name){
+  const str = classId + '|' + name;
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+  return 'stu-n' + h.toString(36);
+}
+
+// 반에 학생으로 참여(이름이 같으면 기존 학생). 반환: { studentId, classes, uid } 또는 null
+//  - 서버 학원: 반 명단(classes)은 선생님만 고칠 수 있으므로, 학생은 자기 등록 문서
+//    members/{내 uid} = {classId, studentId, name, inviteCode}만 만듦. 규칙이 초대코드가 진짜 이 반 것인지 확인함
+//  - 이 기기 학원: 예전처럼 명단 배열에 직접 추가
+async function joinClass(academyId, classId, name, inviteCode){
+  if (!isCloudAcademy(academyId)){
+    const classes = lsGet(lsDataKey(academyId, 'classes'), []);
     const cls = classes.find(c => c.id === classId);
     if (!cls) return null;
     let student = (cls.students || []).find(s => s.name.trim() === name);
-    let added = false;
     if (!student){
-      student = { id: 'stu-' + Date.now(), name };
+      student = { id: studentIdForName(classId, name), name };
       cls.students = [...(cls.students || []), student];
-      added = true;
+      lsSet(lsDataKey(academyId, 'classes'), classes);
     }
-    return { studentId: student.id, added };
-  };
-
-  if (!isCloudAcademy(academyId)){
-    const classes = lsGet(lsDataKey(academyId, 'classes'), []);
-    const r = findOrAdd(classes);
-    if (!r) return null;
-    if (r.added) lsSet(lsDataKey(academyId, 'classes'), classes);
-    return { studentId: r.studentId, classes };
+    return { studentId: student.id, classes, uid: null };
   }
 
-  const ref = academyDataRef(academyId, 'classes');
-  return db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const classes = snap.exists ? (snap.data().list || []) : [];
-    const r = findOrAdd(classes);
-    if (!r) return null;
-    if (r.added) tx.set(ref, { list: classes });
-    return { studentId: r.studentId, classes };
-  });
+  const user = await ensureSignedIn();
+  const snap = await academyDataRef(academyId, 'classes').get();
+  const classes = snap.exists ? (snap.data().list || []) : [];
+  const cls = classes.find(c => c.id === classId);
+  if (!cls) return null;
+  const existing = (cls.students || []).find(s => s.name.trim() === name);
+  const studentId = existing ? existing.id : studentIdForName(classId, name);
+  await memberRef(academyId, user.uid).set({ classId, studentId, name, inviteCode, joinedAt: Date.now() });
+  return { studentId, classes, uid: user.uid };
+}
+
+// 저장된 학생 신원이 서버 등록(members)과 맞는지 확인. 로그아웃 등으로 기기의 익명 계정이 바뀌었으면
+// 저장해 둔 초대코드로 조용히 다시 등록함. 반환: 'ok' | 'removed'(선생님이 명단에서 뺐거나 코드가 바뀜)
+async function ensureStudentMembership(){
+  const ctx = currentStudentCtx;
+  if (!ctx.inviteCode || !ctx.name) return 'removed'; // 예전 형식 신원 - 초대코드로 다시 들어와야 함
+  const user = await ensureSignedIn();
+  const ref = memberRef(ctx.academyId, user.uid);
+  const snap = await ref.get();
+  if (snap.exists){
+    const m = snap.data();
+    if (m.classId === ctx.classId && m.studentId === ctx.studentId) return 'ok';
+  } else if (ctx.uid === user.uid){
+    return 'removed'; // 같은 계정인데 등록이 없어짐 = 선생님이 명단에서 뺌
+  }
+  try {
+    await ref.set({ classId: ctx.classId, studentId: ctx.studentId, name: ctx.name, inviteCode: ctx.inviteCode, joinedAt: Date.now() });
+  } catch(e){
+    if (e.code === 'permission-denied') return 'removed';
+    throw e;
+  }
+  currentStudentCtx = { ...ctx, uid: user.uid };
+  lsSet('student_identity', currentStudentCtx);
+  return 'ok';
 }
 
 gateStartBtn.addEventListener('click', async () => {
   const code = gateCodeInput.value.trim();
   const name = gateNameInput.value.trim();
   if (!code || !name){ setGateStatus('초대코드와 이름을 모두 입력해 주세요.'); return; }
+  if (name.length > 20){ setGateStatus('이름은 20자 이내로 입력해 주세요.'); return; }
 
   gateStartBtn.disabled = true;
   setGateStatus('');
@@ -1192,19 +1296,18 @@ gateStartBtn.addEventListener('click', async () => {
     const found = await findClassByInviteCode(code);
     if (!found){ setGateStatus('초대코드를 다시 확인해 주세요.'); return; }
 
-    const joined = await joinClass(found.academyId, found.classId, name);
+    const joined = await joinClass(found.academyId, found.classId, name, code);
     if (!joined){ setGateStatus('반 정보를 찾을 수 없어요. 선생님께 초대코드를 다시 확인해 주세요.'); return; }
 
-    setActiveAcademy(found.academyId);
-    dataCache.classes = joined.classes; // 서버 구독이 도착하기 전에도 바로 숙제가 보이도록
-    lsSet(lsDataKey(found.academyId, 'classes'), joined.classes);
-
-    const identity = { academyId: found.academyId, classId: found.classId, studentId: joined.studentId };
+    const identity = { academyId: found.academyId, classId: found.classId, studentId: joined.studentId, name, inviteCode: code, uid: joined.uid };
     currentStudentCtx = identity;
     lsSet('student_identity', identity);
+    setActiveAcademy(found.academyId, 'student', joined.studentId);
+    dataCache.classes = joined.classes; // 서버 구독이 도착하기 전에도 바로 숙제가 보이도록
+    lsSet(lsDataKey(found.academyId, 'classes'), joined.classes);
     showScreen('select');
   } catch(e){
-    setGateStatus('서버 연결에 실패했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. (' + e.message + ')');
+    setGateStatus(serverErrorMessage(e));
   } finally {
     gateStartBtn.disabled = false;
   }
@@ -1230,7 +1333,7 @@ function renderStudentView(){
   if (cls && currentStudentCtx){
     const student = (cls.students||[]).find(s => s.id === currentStudentCtx.studentId);
     studentIdBar.style.display = 'flex';
-    studentIdLabel.textContent = `📚 ${cls.name} · ${student ? student.name : '학생'}`;
+    studentIdLabel.textContent = `📚 ${cls.name} · ${student ? student.name : (currentStudentCtx.name || '학생')}`;
     homeworkSection.classList.remove('hidden');
     toggleBrowseBtn.style.display = 'block';
     toggleBrowseBtn.textContent = '전체 문제 둘러보기';
@@ -1981,17 +2084,33 @@ function isTeacherScreenVisible(){
 }
 
 function enterTeacherMode(){
-  setActiveAcademy(teacherAcademy.id);
+  setActiveAcademy(teacherAcademy.id, 'teacher');
   showScreen('teacher');
   maybeImportLegacyData();
 }
 
 // 학생 화면으로: 학생으로 참여 중이면 그 학원, 아니면(둘러보기) 로그인한 선생님 학원의 문제를 보여줌
-function enterStudentMode(){
-  const academyId = (currentStudentCtx && currentStudentCtx.academyId)
-    || (teacherAcademy && teacherAcademy.id)
-    || null;
-  setActiveAcademy(academyId);
+async function enterStudentMode(){
+  if (currentStudentCtx && isCloudAcademy(currentStudentCtx.academyId)){
+    showScreen('select'); // 확인하는 동안 "반 정보를 불러오는 중" 표시
+    let status = 'ok';
+    try {
+      status = await ensureStudentMembership();
+    } catch(e){
+      // 네트워크 문제 등: 저장된 정보로 화면은 계속 보여주고, 상단에 안내
+      setFbStatus(false, serverErrorMessage(e));
+    }
+    if (status === 'removed'){
+      currentStudentCtx = null;
+      lsSet('student_identity', null);
+      setActiveAcademy(null);
+      showScreen('gate');
+      setGateStatus('반 등록이 해제됐어요. 선생님께 받은 초대코드로 다시 들어와 주세요.');
+      return;
+    }
+  }
+  const academyId = currentStudentCtx ? currentStudentCtx.academyId : (teacherAcademy && teacherAcademy.id) || null;
+  setActiveAcademy(academyId, currentStudentCtx ? 'student' : 'browse', currentStudentCtx && currentStudentCtx.studentId);
   showScreen('select');
 }
 
@@ -2014,7 +2133,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
 if (authAvailable){
   auth.onAuthStateChanged(async (user) => {
-    if (!user){
+    resolveAuthInit();
+    if (!user || user.isAnonymous){ // 익명 = 학생 기기
       teacherAcademy = null;
       if (isTeacherScreenVisible()) enterStudentMode();
       return;
@@ -2069,14 +2189,21 @@ async function maybeImportLegacyData(){
     for (const cls of legacy.classes){
       await registerInviteCode(cls, legacy.classes);
     }
-    Object.keys(DATA_DOCS).forEach(name => {
-      if (name === 'submissions') saveSubmissions(legacy[name]);
-      else saveData(name, legacy[name]);
-    });
+    SHARED_DOCS.forEach(name => saveData(name, legacy[name]));
+    await importRecords('completions', legacy.completions, completionDocId);
+    await importRecords('submissions', legacy.submissions, sub => sub.id);
     refreshCurrentScreen();
     alert('가져오기가 끝났어요. 학생들은 기존 초대코드로 다시 들어오면 돼요. (코드가 겹쳐서 바뀐 반은 반 상세에서 새 코드를 확인해 주세요)');
   } catch(e){
     console.warn('예전 데이터 확인 실패:', e.message);
+  }
+}
+// 배열로 저장돼 있던 기록을 1건 = 문서 1개로 옮김 (썸네일이 들어 있어 한 번에 조금씩)
+async function importRecords(name, list, idOf){
+  for (let i = 0; i < list.length; i += 20){
+    const batch = db.batch();
+    list.slice(i, i + 20).forEach(item => batch.set(academyColl(activeAcademyId, name).doc(idOf(item)), item));
+    await batch.commit();
   }
 }
 document.getElementById('formBackBtn').addEventListener('click', () => showScreen('teacher'));
@@ -2105,7 +2232,7 @@ function renderClassList(){
   }
   classList.innerHTML = classes.map(c => `
     <button class="problem-item" data-class="${c.id}">
-      <span class="tag">학생 ${ (c.students||[]).length }명 · 숙제 ${ (c.homework||[]).length }개</span>
+      <span class="tag">학생 ${ getClassStudents(c).length }명 · 숙제 ${ (c.homework||[]).length }개</span>
       <div class="ptitle">${c.name}</div>
     </button>
   `).join('');
@@ -2218,21 +2345,30 @@ function renderClassDetail(){
   const cls = getCurrentClass();
   if (!cls) return;
   classDetailName.textContent = cls.name;
-  classDetailMeta.textContent = `학생 ${(cls.students||[]).length}명 · 숙제 ${(cls.homework||[]).length}개`;
+  const roster = getClassStudents(cls);
+  classDetailMeta.textContent = `학생 ${roster.length}명 · 숙제 ${(cls.homework||[]).length}개`;
   classInviteCode.textContent = cls.inviteCode || '—';
   aiGradingToggle.checked = cls.aiGrading !== false;
 
-  studentChipList.innerHTML = (cls.students || []).map(s =>
+  studentChipList.innerHTML = roster.map(s =>
     `<span class="student-chip">${s.name}<button data-rm-student="${s.id}">✕</button></span>`
   ).join('') || '<div class="empty-note" style="padding:8px 2px;">아직 등록된 학생이 없어요.</div>';
   studentChipList.querySelectorAll('[data-rm-student]').forEach(btn => {
     btn.addEventListener('click', () => {
       const c = getCurrentClass();
-      c.students = (c.students||[]).filter(s => s.id !== btn.dataset.rmStudent);
+      const sid = btn.dataset.rmStudent;
+      c.students = (c.students||[]).filter(s => s.id !== sid);
       const classes = loadClasses();
       const idx = classes.findIndex(x => x.id === c.id);
       classes[idx] = c;
       saveClasses(classes);
+      // 초대코드로 들어온 기기 등록도 지움 → 그 기기는 더 이상 이 반으로 제출할 수 없음
+      if (isCloudAcademy(activeAcademyId)){
+        dataCache.members
+          .filter(m => m.classId === c.id && m.studentId === sid)
+          .forEach(m => memberRef(activeAcademyId, m.uid).delete().catch(e => console.warn('학생 등록 삭제 실패:', e.message)));
+        dataCache.members = dataCache.members.filter(m => !(m.classId === c.id && m.studentId === sid));
+      }
       renderClassDetail();
     });
   });
@@ -2249,7 +2385,7 @@ function renderClassDetail(){
     homeworkStatusList.innerHTML = hw.map(h => {
       const p = all.find(x => x.id === h.problemId);
       const title = p ? p.title : '(삭제된 문제)';
-      const students = cls.students || [];
+      const students = roster;
       const badges = students.length === 0
         ? '<span style="font-size:11.5px; color:var(--ink-soft);">등록된 학생이 없어요</span>'
         : students.map(s => {
@@ -2300,7 +2436,7 @@ function renderSubmissionList(cls, allProblems){
     return;
   }
   submissionList.innerHTML = subs.map(s => {
-    const student = (cls.students||[]).find(x => x.id === s.studentId);
+    const student = getClassStudents(cls).find(x => x.id === s.studentId);
     const p = allProblems.find(x => x.id === s.problemId);
     const modeLabel = s.mode === 'photo' ? '📷 사진' : '🎥 녹화';
     const statusLabel = s.aiEnabled ? 'AI 채점 완료' : '선생님 확인 대기';
@@ -2334,7 +2470,7 @@ function openSubmissionDetail(subId){
   const s = loadSubmissions().find(x => x.id === subId);
   if (!s) return;
   const cls = getCurrentClass();
-  const student = cls && (cls.students||[]).find(x => x.id === s.studentId);
+  const student = cls && getClassStudents(cls).find(x => x.id === s.studentId);
   const p = ALL_PROBLEMS().find(x => x.id === s.problemId);
   const modeLabel = s.mode === 'photo' ? '사진 채점' : '화면 녹화';
 
@@ -2361,7 +2497,9 @@ document.getElementById('addStudentBtn').addEventListener('click', () => {
   const name = newStudentName.value.trim();
   if (!name) return;
   const c = getCurrentClass();
-  c.students = [...(c.students||[]), { id: 'stu-' + Date.now(), name }];
+  if (getClassStudents(c).some(s => s.name.trim() === name)){ alert('이미 명단에 있는 이름이에요.'); return; }
+  // 이름 기반 ID라서, 학생이 나중에 같은 이름으로 초대코드를 입력하면 이 학생으로 연결됨
+  c.students = [...(c.students||[]), { id: studentIdForName(c.id, name), name }];
   const classes = loadClasses();
   const idx = classes.findIndex(x => x.id === c.id);
   classes[idx] = c;
@@ -2568,13 +2706,13 @@ function setFbStatus(connected, msg){
   if (currentStudentCtx && !currentStudentCtx.academyId){
     // 학원 분리 전에 저장된 신원: 서버를 못 쓰는 환경이면 이 기기 학원으로 이어서 쓰고,
     // 서버를 쓰는 환경이면 초대코드로 다시 들어오게 함(선생님이 학원 계정으로 데이터를 옮겼을 수 있어서)
-    if (fbAvailable) currentStudentCtx = null;
+    if (cloudEnabled()) currentStudentCtx = null;
     else currentStudentCtx = { ...currentStudentCtx, academyId: LOCAL_ACADEMY };
     lsSet('student_identity', currentStudentCtx);
   }
   if (currentStudentCtx){
-    setActiveAcademy(currentStudentCtx.academyId);
-    if (isCloudAcademy(currentStudentCtx.academyId)){ showScreen('select'); return; } // 반 정보는 서버 구독으로 도착
+    if (isCloudAcademy(currentStudentCtx.academyId)){ enterStudentMode(); return; } // 서버 등록 확인 후 반 정보는 구독으로 도착
+    setActiveAcademy(currentStudentCtx.academyId, 'student', currentStudentCtx.studentId);
     const cls = loadClasses().find(c => c.id === currentStudentCtx.classId);
     const stu = cls && (cls.students||[]).find(s => s.id === currentStudentCtx.studentId);
     if (cls && stu){ showScreen('select'); return; }
