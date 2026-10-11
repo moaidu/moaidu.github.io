@@ -7,3 +7,6 @@
 
 새 에피소드: `episodes/ep002.json` 을 ep001.json 형식으로 추가.
 캐릭터 외형: `characters.json`. 한글 폰트는 `fonts/font.ttf`(예: 나눔고딕) 또는 `WEBTOON_FONT` 환경변수.
+
+캐릭터 시트: `python3 webtoon.py sheet` (GEMINI_API_KEY 필요) → `characters/sheet.png`
+컷 그림 자동 생성: `python3 webtoon.py draw ep001` (시트를 참조해 그림, `--force` 로 재생성)

@@ -55,6 +55,58 @@ def cmd_placeholder(a):
     print(d)
 
 
+def gemini(parts, ratio):
+    import base64, urllib.request
+    key = os.environ.get("GEMINI_API_KEY") or sys.exit("GEMINI_API_KEY 환경변수가 없습니다.")
+    model = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
+    body = {"contents": [{"parts": parts}],
+            "generationConfig": {"responseModalities": ["TEXT", "IMAGE"], "imageConfig": {"aspectRatio": ratio}}}
+    req = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        json.dumps(body).encode(), {"Content-Type": "application/json", "x-goog-api-key": key})
+    with urllib.request.urlopen(req, timeout=180) as r:
+        res = json.load(r)
+    for p in res["candidates"][0]["content"]["parts"]:
+        d = p.get("inlineData") or p.get("inline_data")
+        if d:
+            return base64.b64decode(d["data"])
+    sys.exit("이미지가 반환되지 않았습니다: " + json.dumps(res, ensure_ascii=False)[:500])
+
+
+def ref_part(path):
+    import base64
+    return {"inlineData": {"mimeType": "image/png", "data": base64.b64encode(Path(path).read_bytes()).decode()}}
+
+
+def cmd_sheet(a):
+    chars = json.loads((ROOT / "characters.json").read_text(encoding="utf-8"))
+    cast = "\n".join(f"- {k}: {v}" for k, v in chars["characters"].items())
+    prompt = (f"Create a character reference sheet for a Korean family webtoon. Style: {chars['style']}. "
+              f"Simple white background. Show each character full-body, standing, front view, side by side with even spacing:\n{cast}")
+    out = ROOT / "characters" / "sheet.png"
+    out.parent.mkdir(exist_ok=True)
+    out.write_bytes(gemini([{"text": prompt}], "16:9"))
+    print(out)
+
+
+def cmd_draw(a):
+    chars = json.loads((ROOT / "characters.json").read_text(encoding="utf-8"))
+    ep = load(a.episode)
+    sheet = ROOT / "characters" / "sheet.png"
+    if not sheet.exists():
+        sys.exit("먼저 `webtoon.py sheet` 로 캐릭터 시트를 만들고 확정하세요.")
+    d = ROOT / "images" / a.episode
+    d.mkdir(parents=True, exist_ok=True)
+    for i, c in enumerate(ep["cuts"], 1):
+        f = d / f"{i:02d}.png"
+        if f.exists() and not a.force:
+            continue
+        prompt = (f"Using the attached character reference sheet, draw this scene with the exact same characters and style. "
+                  f"Scene: {c['scene']}. {chars['style']}")
+        f.write_bytes(gemini([ref_part(sheet), {"text": prompt}], "4:5"))
+        print(f)
+
+
 def wrap(draw, text, f, maxw):
     lines, cur = [], ""
     for ch in text:
@@ -125,5 +177,7 @@ p = argparse.ArgumentParser(description=__doc__)
 sp = p.add_subparsers(required=True)
 for name, fn in (("prompts", cmd_prompts), ("placeholder", cmd_placeholder), ("compose", cmd_compose)):
     s = sp.add_parser(name); s.add_argument("episode"); s.set_defaults(fn=fn)
+s = sp.add_parser("sheet"); s.set_defaults(fn=cmd_sheet)
+s = sp.add_parser("draw"); s.add_argument("episode"); s.add_argument("--force", action="store_true"); s.set_defaults(fn=cmd_draw)
 a = p.parse_args()
 a.fn(a)
