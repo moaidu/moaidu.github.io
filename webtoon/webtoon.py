@@ -57,7 +57,7 @@ def cmd_placeholder(a):
 
 def gemini(parts, ratio):
     import base64, urllib.request
-    key = os.environ.get("GEMINI_API_KEY") or sys.exit("GEMINI_API_KEY 환경변수가 없습니다.")
+    key = os.environ.get("GEMINI_API_KEY", "injected-by-network-secret")  # 네트워크 시크릿이 실제 키로 바꿔 보냄
     model = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
     body = {"contents": [{"parts": parts}],
             "generationConfig": {"responseModalities": ["TEXT", "IMAGE"], "imageConfig": {"aspectRatio": ratio}}}
