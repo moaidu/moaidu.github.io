@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <title>지니 (Jini)</title>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#fff6e5"/>
+      <stop offset="1" stop-color="#ffd9e6"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd3ff"/>
+      <stop offset="1" stop-color="#5aa9f0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="480" fill="url(#bg)"/>
+
+  <!-- shadow -->
+  <ellipse cx="200" cy="440" rx="95" ry="14" fill="#000" opacity=".12"/>
+
+  <!-- feet -->
+  <ellipse cx="160" cy="428" rx="30" ry="14" fill="#3b6fb6"/>
+  <ellipse cx="240" cy="428" rx="30" ry="14" fill="#3b6fb6"/>
+
+  <!-- arms -->
+  <path d="M112 300 Q70 320 82 360 Q92 368 104 352 Q120 330 130 318Z" fill="url(#body)" stroke="#3b6fb6" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M288 300 Q336 262 322 226 Q310 218 300 232 Q292 256 270 280Z" fill="url(#body)" stroke="#3b6fb6" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- body -->
+  <path d="M200 270 C130 270 108 330 118 380 C126 424 170 430 200 430 C230 430 274 424 282 380 C292 330 270 270 200 270Z" fill="url(#body)" stroke="#3b6fb6" stroke-width="4"/>
+  <ellipse cx="200" cy="370" rx="46" ry="42" fill="#e8f6ff" opacity=".85"/>
+
+  <!-- book (wiki!) -->
+  <g transform="rotate(-8 200 372)">
+    <rect x="168" y="350" width="64" height="48" rx="5" fill="#ffcf5c" stroke="#b9852a" stroke-width="3"/>
+    <line x1="200" y1="350" x2="200" y2="398" stroke="#b9852a" stroke-width="3"/>
+    <path d="M176 362h16M176 372h16M208 362h16M208 372h16" stroke="#b9852a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ears -->
+  <path d="M104 150 L88 70 L158 112Z" fill="#8fd3ff" stroke="#3b6fb6" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M296 150 L312 70 L242 112Z" fill="#8fd3ff" stroke="#3b6fb6" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M108 132 L100 92 L138 114Z" fill="#ffb3cc"/>
+  <path d="M292 132 L300 92 L262 114Z" fill="#ffb3cc"/>
+
+  <!-- head -->
+  <ellipse cx="200" cy="190" rx="110" ry="98" fill="url(#body)" stroke="#3b6fb6" stroke-width="4"/>
+  <ellipse cx="200" cy="212" rx="84" ry="66" fill="#e8f6ff"/>
+
+  <!-- hair tuft -->
+  <path d="M190 96 Q180 64 204 56 Q196 76 212 84 Q226 70 222 52 Q246 72 220 98Z" fill="#5aa9f0" stroke="#3b6fb6" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- eyes -->
+  <ellipse cx="160" cy="190" rx="16" ry="21" fill="#23304d"/>
+  <ellipse cx="240" cy="190" rx="16" ry="21" fill="#23304d"/>
+  <circle cx="166" cy="182" r="6.5" fill="#fff"/>
+  <circle cx="246" cy="182" r="6.5" fill="#fff"/>
+  <circle cx="155" cy="198" r="3" fill="#fff"/>
+  <circle cx="235" cy="198" r="3" fill="#fff"/>
+
+  <!-- cheeks -->
+  <ellipse cx="128" cy="226" rx="17" ry="10" fill="#ff9db8" opacity=".7"/>
+  <ellipse cx="272" cy="226" rx="17" ry="10" fill="#ff9db8" opacity=".7"/>
+
+  <!-- mouth -->
+  <path d="M184 226 Q200 246 216 226" fill="#fff" stroke="#23304d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- sparkles -->
+  <g fill="#ffcf5c">
+    <path d="M60 200 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z"/>
+    <path d="M340 150 l5 11 11 5 -11 5 -5 11 -5 -11 -11 -5 11 -5z"/>
+    <path d="M330 340 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z"/>
+  </g>
+</svg>
