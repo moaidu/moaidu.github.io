@@ -56,7 +56,7 @@ def cmd_placeholder(a):
 
 
 def gemini(parts, ratio):
-    import base64, urllib.request
+    import base64, urllib.error, urllib.request
     key = os.environ.get("GEMINI_API_KEY", "injected-by-network-secret")  # 네트워크 시크릿이 실제 키로 바꿔 보냄
     model = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
     body = {"contents": [{"parts": parts}],
@@ -64,8 +64,11 @@ def gemini(parts, ratio):
     req = urllib.request.Request(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         json.dumps(body).encode(), {"Content-Type": "application/json", "x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=180) as r:
-        res = json.load(r)
+    try:
+        with urllib.request.urlopen(req, timeout=180) as r:
+            res = json.load(r)
+    except urllib.error.HTTPError as e:
+        sys.exit(f"Gemini API 오류 {e.code}: {e.read().decode('utf-8', 'ignore')[:600]}")
     for p in res["candidates"][0]["content"]["parts"]:
         d = p.get("inlineData") or p.get("inline_data")
         if d:
