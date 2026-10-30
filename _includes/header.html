@@ -1,0 +1,12 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    <nav class="nav">
+      {% for c in site.data.categories %}
+      <a href="{{ '/category/' | append: c.slug | append: '/' | relative_url }}"
+         {% if page.url contains c.slug %}class="active"{% endif %}>{{ c.name }}</a>
+      {% endfor %}
+      <a href="{{ '/about/' | relative_url }}" {% if page.url contains '/about' %}class="active"{% endif %}>소개</a>
+    </nav>
+  </div>
+</header>

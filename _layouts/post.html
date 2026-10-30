@@ -1,0 +1,17 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post-header">
+    {% assign cat = page.categories | first %}
+    {% for c in site.data.categories %}{% if c.name == cat %}
+    <a class="chip" href="{{ '/category/' | append: c.slug | append: '/' | relative_url }}">{{ c.emoji }} {{ c.name }}</a>
+    {% endif %}{% endfor %}
+    <h1>{{ page.title }}</h1>
+    <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y년 %m월 %d일" }}</time>
+  </header>
+  <div class="content">{{ content }}</div>
+  <footer class="post-footer">
+    <a href="{{ '/' | relative_url }}">← 전체 글 보기</a>
+  </footer>
+</article>

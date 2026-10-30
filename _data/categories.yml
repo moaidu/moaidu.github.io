@@ -1,0 +1,16 @@
+- name: 제작일지
+  slug: build-log
+  emoji: "🛠️"
+  desc: Telo, 고입스팟, 고등어디를 만드는 과정을 날것 그대로 기록합니다.
+- name: 브랜드 이야기
+  slug: brand
+  emoji: "🎨"
+  desc: 모아이듀(MOAIDU) BI와 로고를 정하기까지의 고민과 결정.
+- name: 교육 인사이트
+  slug: edu-insight
+  emoji: "📚"
+  desc: 서술형 수학, 고입 제도 등 현장에서 배운 교육 이야기.
+- name: AI 실험실
+  slug: ai-lab
+  emoji: "🧪"
+  desc: 써본 AI 도구와, 비개발자가 AI로 서비스를 만드는 방법.

@@ -1,0 +1,16 @@
+---
+layout: default
+---
+{% assign cat = site.data.categories | where: "slug", page.cat_slug | first %}
+<section class="page-head">
+  <h1>{{ cat.emoji }} {{ cat.name }}</h1>
+  <p class="lead">{{ cat.desc }}</p>
+</section>
+{% assign posts = site.categories[cat.name] %}
+{% if posts.size > 0 %}
+<div class="cards">
+  {% for post in posts %}{% include post-card.html post=post %}{% endfor %}
+</div>
+{% else %}
+<p class="empty">아직 글이 없어요. 곧 올라옵니다 ✍️</p>
+{% endif %}

@@ -1,0 +1,43 @@
+---
+layout: default
+---
+<section class="hero">
+  <p class="eyebrow">MOAIDU · 교육 × AI</p>
+  <h1>AI로 교육 서비스를<br>직접 만드는 사람</h1>
+  <p class="lead">개발 초보에서 시작해, 앱과 브랜드를 하나씩 만들어가는 과정을 그대로 보여드립니다.</p>
+  <a class="btn" href="{{ '/about/' | relative_url }}">소개 보기</a>
+</section>
+
+<section>
+  <h2 class="section-title">만들고 있는 것</h2>
+  <div class="services">
+    {% for s in site.data.services %}
+    <div class="service">
+      <span class="chip">{{ s.tag }}</span>
+      <h3>{% if s.url != "" %}<a href="{{ s.url }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</h3>
+      <p>{{ s.desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">카테고리</h2>
+  <div class="cats">
+    {% for c in site.data.categories %}
+    <a class="cat" href="{{ '/category/' | append: c.slug | append: '/' | relative_url }}">
+      <span class="emoji">{{ c.emoji }}</span>
+      <strong>{{ c.name }}</strong>
+      <small>{{ c.desc }}</small>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">최근 글</h2>
+  <div class="cards">
+    {% for post in site.posts limit: 10 %}{% include post-card.html post=post %}{% endfor %}
+    {% if site.posts.size == 0 %}<p class="empty">아직 글이 없어요. 곧 올라옵니다 ✍️</p>{% endif %}
+  </div>
+</section>

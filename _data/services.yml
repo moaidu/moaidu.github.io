@@ -1,0 +1,12 @@
+- name: Telo
+  tag: 서술형 수학 AI 채점
+  desc: 학원용 서술형 수학 AI 채점 플랫폼
+  url: ""
+- name: 고입스팟
+  tag: 고입 정보
+  desc: 지역별 지원 가능한 고등학교 안내
+  url: ""
+- name: 고등어디
+  tag: 고교 선택 앱
+  desc: 나에게 맞는 고등학교를 고르는 앱
+  url: ""

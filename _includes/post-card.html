@@ -1,0 +1,11 @@
+<article class="card">
+  <div class="meta">
+    {% assign cat = include.post.categories | first %}
+    {% for c in site.data.categories %}{% if c.name == cat %}
+    <a class="chip" href="{{ '/category/' | append: c.slug | append: '/' | relative_url }}">{{ c.emoji }} {{ c.name }}</a>
+    {% endif %}{% endfor %}
+    <time datetime="{{ include.post.date | date_to_xmlschema }}">{{ include.post.date | date: "%Y.%m.%d" }}</time>
+  </div>
+  <h3><a href="{{ include.post.url | relative_url }}">{{ include.post.title }}</a></h3>
+  <p>{{ include.post.excerpt | strip_html | truncate: 110 }}</p>
+</article>
