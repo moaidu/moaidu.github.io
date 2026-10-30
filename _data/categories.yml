@@ -1,7 +1,7 @@
 - name: 제작일지
   slug: build-log
   emoji: "🛠️"
-  desc: Telo, 고입스팟, 고등어디를 만드는 과정을 날것 그대로 기록합니다.
+  desc: Telo, 고등어디를 만드는 과정을 날것 그대로 기록합니다.
 - name: 브랜드 이야기
   slug: brand
   emoji: "🎨"
