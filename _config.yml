@@ -1,0 +1,29 @@
+title: 지니의 제작노트
+tagline: AI로 교육 서비스를 직접 만드는 사람
+description: 개발 초보에서 시작해, 앱과 브랜드를 하나씩 만들어가는 과정을 기록합니다. 모아이듀(MOAIDU) 운영.
+lang: ko-KR
+author: 지니
+
+# ── 배포 주소 ─────────────────────────────────────────
+# 저장소 이름이 moaidu.github.io 일 때의 설정입니다.
+url: "https://moaidu.github.io"
+baseurl: ""
+
+# ── 연락/링크 (소개 페이지·푸터에서 사용) ───────────────
+email: yonjin0319@gmail.com
+github_username: moaidu
+
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+timezone: Asia/Seoul
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor
