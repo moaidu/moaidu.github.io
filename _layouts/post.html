@@ -9,6 +9,7 @@ layout: default
     {% endif %}{% endfor %}
     <h1>{{ page.title }}</h1>
     <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y년 %m월 %d일" }}</time>
+    {% if page.link %}<p class="source">출처: <a href="{{ page.link }}" target="_blank" rel="noopener">{{ page.source | default: "원문 보기" }}</a> ↗</p>{% endif %}
   </header>
   <div class="content">{{ content }}</div>
   <footer class="post-footer">

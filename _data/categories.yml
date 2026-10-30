@@ -14,3 +14,7 @@
   slug: ai-lab
   emoji: "🧪"
   desc: 써본 AI 도구와, 비개발자가 AI로 서비스를 만드는 방법.
+- name: 교육 레이더
+  slug: radar
+  emoji: "📡"
+  desc: 초등수학 중심으로 교육 소식을 골라, 쉽게 풀어 드려요.

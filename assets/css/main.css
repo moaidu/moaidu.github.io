@@ -110,3 +110,6 @@ article.post{max-width:720px;margin:0 auto}
   .brand span{display:none}
   .feature .art{height:170px}
 }
+
+.post-header .source{margin:6px 0 0;font-size:.88rem;color:var(--gray)}
+.post-header .source a{text-decoration:underline}
