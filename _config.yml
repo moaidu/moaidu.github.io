@@ -5,13 +5,13 @@ lang: ko-KR
 author: 지니
 
 # ── 배포 주소 ─────────────────────────────────────────
-# 저장소 이름이 yonjin-j.github.io 일 때의 설정입니다.
-url: "https://yonjin-j.github.io"
+# 저장소 이름이 moaidu.github.io 일 때의 설정입니다.
+url: "https://moaidu.github.io"
 baseurl: ""
 
 # ── 연락/링크 (소개 페이지·푸터에서 사용) ───────────────
 email: yonjin0319@gmail.com
-github_username: yonjin-j
+github_username: moaidu
 
 markdown: kramdown
 permalink: /:year/:month/:day/:title/
