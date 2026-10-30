@@ -113,3 +113,24 @@ article.post{max-width:720px;margin:0 auto}
 
 .post-header .source{margin:6px 0 0;font-size:.88rem;color:var(--gray)}
 .post-header .source a{text-decoration:underline}
+
+/* 체험 레이더 */
+.filters{display:flex;gap:8px;margin:0 0 16px}
+.filters button{border:1px solid var(--line);background:var(--white);color:var(--gray);border-radius:999px;padding:5px 16px;font:inherit;font-size:.88rem;cursor:pointer}
+.filters button.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.programs{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.program{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.program[hidden]{display:none}
+.program h3{margin:8px 0 2px;font-size:1.08rem;line-height:1.45}
+.program .org{margin:0 0 10px;color:var(--gray);font-size:.88rem}
+.program dl{margin:0 0 8px;font-size:.9rem}
+.program dl div{display:flex;gap:10px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.program dt{width:68px;color:var(--gray);flex:none}
+.program dd{margin:0}
+.program dd b{display:inline-block;margin-left:4px;padding:0 8px;border-radius:999px;background:var(--ink-10);font-size:.76rem}
+.program dd b.soon{background:var(--ink);color:var(--white)}
+.program .note{margin:6px 0;font-size:.88rem}
+.program .checked{margin:8px 0 0;font-size:.8rem;color:var(--gray)}
+.program .checked a{text-decoration:underline}
+.program.closed{opacity:.5}
+@media(max-width:700px){.programs{grid-template-columns:1fr}}

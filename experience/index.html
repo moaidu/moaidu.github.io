@@ -1,0 +1,56 @@
+---
+layout: default
+title: 체험 레이더
+permalink: /experience/
+---
+<section class="page-head">
+  <h1>🧭 체험 레이더</h1>
+  <p class="lead">초등·중등 아이들이 신청해서 참여할 수 있는 체험·교육 프로그램을 모았어요. 신청 전에는 꼭 원문 공고를 다시 확인해 주세요.</p>
+</section>
+
+{% assign items = site.data.programs | sort: "deadline" %}
+{% if items.size > 0 %}
+<div class="filters" id="filters">
+  <button class="on" data-f="all">전체</button>
+  <button data-f="초등">초등</button>
+  <button data-f="중등">중등</button>
+</div>
+<div class="programs" id="programs">
+  {% for p in items %}
+  <article class="program" data-deadline="{{ p.deadline }}" data-level="{{ p.level }}">
+    <div class="meta"><span class="chip">{{ p.level }}</span><span>{{ p.grade }}</span></div>
+    <h3><a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.name }}</a></h3>
+    <p class="org">{{ p.org }}</p>
+    <dl>
+      <div><dt>진행</dt><dd>{{ p.period }}</dd></div>
+      <div><dt>신청 마감</dt><dd class="dl">{{ p.deadline | date: "%Y.%m.%d" }}</dd></div>
+      <div><dt>비용</dt><dd>{{ p.cost }}</dd></div>
+    </dl>
+    {% if p.note %}<p class="note">{{ p.note }}</p>{% endif %}
+    <p class="checked">원문 확인 {{ p.checked | date: "%Y.%m.%d" }} · <a href="{{ p.url }}" target="_blank" rel="noopener">공고 보러 가기 ↗</a></p>
+  </article>
+  {% endfor %}
+</div>
+<script>
+(function(){
+  var today=new Date();today.setHours(0,0,0,0);
+  document.querySelectorAll('.program').forEach(function(el){
+    var d=new Date(el.dataset.deadline+'T23:59:59');
+    var dd=el.querySelector('.dl');
+    if(d<today){el.classList.add('closed');dd.insertAdjacentHTML('beforeend',' <b>마감</b>');}
+    else{var n=Math.ceil((d-today)/864e5);if(n<=7)dd.insertAdjacentHTML('beforeend',' <b class="soon">D-'+n+'</b>');}
+  });
+  document.querySelectorAll('#filters button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#filters button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      document.querySelectorAll('.program').forEach(function(el){
+        el.hidden=!(b.dataset.f==='all'||el.dataset.level.indexOf(b.dataset.f)>-1);
+      });
+    });
+  });
+})();
+</script>
+{% else %}
+<p class="empty">아직 등록된 정보가 없어요. 곧 올라옵니다 ✍️</p>
+{% endif %}
