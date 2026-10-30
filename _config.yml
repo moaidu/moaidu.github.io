@@ -5,10 +5,9 @@ lang: ko-KR
 author: 지니
 
 # ── 배포 주소 ─────────────────────────────────────────
-# 지금은 프로젝트 저장소(jini-s-wiki)용 설정입니다.
-# 저장소 이름을 yonjin-j.github.io 로 만들면 baseurl 을 "" 로 바꾸세요.
+# 저장소 이름이 yonjin-j.github.io 일 때의 설정입니다.
 url: "https://yonjin-j.github.io"
-baseurl: "/jini-s-wiki"
+baseurl: ""
 
 # ── 연락/링크 (소개 페이지·푸터에서 사용) ───────────────
 email: yonjin0319@gmail.com
