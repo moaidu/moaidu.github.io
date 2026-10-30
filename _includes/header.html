@@ -1,6 +1,9 @@
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <img src="{{ '/assets/img/moaidu-logo.svg' | relative_url }}" alt="모아이듀 MOAIDU">
+      <span>{{ site.title }}</span>
+    </a>
     <nav class="nav">
       {% for c in site.data.categories %}
       <a href="{{ '/category/' | append: c.slug | append: '/' | relative_url }}"
