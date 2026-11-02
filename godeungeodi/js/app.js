@@ -58,6 +58,7 @@ const actions = {
   },
   sigun(el) { store.setRegion(el.dataset.key, el.dataset.sigun); sheetKey = null; finishPick(); },
   install() { pwaInstall(); },
+  closehelp() { const h = document.getElementById('pwahelp'); if (h) h.remove(); },
   peek(el) { peekArea = el.dataset.sigun; render(true); },
   // 후보 학교 담기/빼기 (학교 정보 화면의 책갈피 버튼)
   cand(el) {
