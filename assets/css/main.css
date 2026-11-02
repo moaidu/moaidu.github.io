@@ -1,5 +1,5 @@
 /* MOAIDU BI: Midnight Ink 55 / Paper 25 / Spark Orange 10 (오렌지는 로고의 i 한 곳만) */
-:root{--ink:#13163F;--paper:#F7F5F0;--white:#fff;--orange:#FF5A1F;--blue:#2F6BFF;--gray:#5B5E73;--ink-60:#71738C;--ink-10:#E7E8EC;--line:#E4E1D8;--yellow:#FFC21A;--mint:#14B89A;--font-ko:"Gothic A1","Pretendard",sans-serif;--font-en:"Outfit","Gothic A1",sans-serif}
+:root{--ink:#13163F;--paper:#F7F5F0;--white:#fff;--orange:#FF5A1F;--blue:#2F6BFF;--gray:#5B5E73;--ink-60:#71738C;--ink-10:#E7E8EC;--line:#E4E1D8;--yellow:#FFC21A;--mint:#14B89A;--font-ko:"Noto Sans KR","Pretendard",sans-serif;--font-en:"Outfit","Gothic A1",sans-serif}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-ko);font-size:16px;line-height:1.7;word-break:keep-all}
