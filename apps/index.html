@@ -1,0 +1,30 @@
+---
+layout: default
+title: 만든 앱
+permalink: /apps/
+---
+<section class="page-head">
+  <h1>📱 만든 앱</h1>
+  <p class="lead">평소에 답답했던 것들을 하나씩 앱으로 만들고 있어요.</p>
+</section>
+
+<div class="apps">
+  {% for a in site.data.apps %}
+  <article class="app" id="{{ a.id }}">
+    <div class="app-head">
+      {% if a.icon %}<img class="app-icon" src="{{ a.icon | relative_url }}" alt="{{ a.name }} 아이콘">{% endif %}
+      <div class="app-title">
+        <h2>{{ a.name }}</h2>
+        <p class="tagline">{{ a.tagline }}</p>
+      </div>
+      <span class="chip">{{ a.status }}</span>
+    </div>
+    <dl>
+      <div><dt>만든 이유</dt><dd>{{ a.why }}</dd></div>
+      <div><dt>이런 분께</dt><dd>{{ a.for }}</dd></div>
+    </dl>
+    <a class="btn" href="{{ a.url | relative_url }}">{{ a.button | default: "앱 열기" }} ↗</a>
+    {% if a.note %}<p class="app-note">{{ a.note }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</div>

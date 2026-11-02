@@ -134,3 +134,20 @@ article.post{max-width:720px;margin:0 auto}
 .program .checked a{text-decoration:underline}
 .program.closed{opacity:.5}
 @media(max-width:700px){.programs{grid-template-columns:1fr}}
+
+/* 만든 앱 */
+.apps{display:grid;gap:18px}
+.app{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:24px 26px}
+.app-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.app h2{margin:0;font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
+.app .tagline{margin:2px 0 0;color:var(--gray)}
+.app dl{margin:0 0 18px}
+.app dl div{display:flex;gap:14px;padding:8px 0;border-top:1px solid var(--line)}
+.app dt{width:72px;flex:none;color:var(--gray);font-size:.9rem}
+.app dd{margin:0}
+.app-note{margin:14px 0 0;font-size:.82rem;color:var(--gray)}
+@media(max-width:560px){.app dl div{flex-direction:column;gap:2px}}
+
+.app-head{align-items:center}
+.app-icon{width:72px;height:72px;border-radius:18px;flex:none;box-shadow:0 2px 8px rgba(19,22,63,.15)}
+.app-title{flex:1;min-width:0}
