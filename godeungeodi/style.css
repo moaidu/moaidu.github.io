@@ -1,0 +1,424 @@
+@font-face{font-family:Pretendard;src:url(fonts/PretendardVariable.woff2) format("woff2");font-weight:45 920;font-display:swap}
+/* 색은 브랜드/디자인시스템/tokens.css 에서 옵니다(ink, muted, line, indigo, coral, paper). 아래는 이 앱의 옛 이름을 브랜드 토큰에 연결한 것 */
+:root{--bg:var(--paper);--sub:var(--muted);--main:var(--indigo);--navy:var(--ink);--orange:var(--coral);--teal:#0FA3A3;--soft:#ECEBFB;--yellow:#ffd24d}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Pretendard,"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;letter-spacing:-.02em}
+a{color:inherit;text-decoration:none;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100%;max-width:520px;margin:0 auto;background:#fff;position:relative}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* 아래 메뉴 */
+.nav{display:flex;border-top:1px solid var(--line);background:#fff;padding-bottom:env(safe-area-inset-bottom)}
+.nav a{flex:1;text-align:center;padding:9px 0 12px;font-size:12px;color:var(--sub)}
+.nav a i{display:block;font-style:normal;font-size:19px}
+.nav a.on{color:var(--main);font-weight:800}
+
+/* 첫 화면(지도) */
+.hero{background:var(--navy);color:#fff;padding:16px 16px 18px;text-align:center}
+.logo{display:block;height:24px;width:auto;margin:0 auto 0 0}
+.hero .topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.18);text-align:left}
+.hero .topbar .install{margin:0;padding:6px 12px;font-size:12.5px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45)}
+.hero h1{margin:18px 0 2px;font-size:29px;line-height:1.25;font-weight:900;letter-spacing:-.04em}
+.hero h1 em,.intro h1 em,.mini .t em{font-style:normal;color:var(--yellow)}
+.hero p{margin:0 0 8px;font-size:13.5px;color:#dbe4ff}
+.mapbox{margin:4px 18px 0}
+.map{width:100%;display:block}
+.map .rg{fill:#7d96ff;stroke:#fff;stroke-width:1}
+.map [data-act]{cursor:pointer}
+.map [data-act]:hover,.map [data-act]:active{fill:var(--orange)}
+.map .rg.sel{fill:var(--orange)}
+.map text{fill:#fff;font-weight:800;text-anchor:middle;dominant-baseline:middle;stroke:rgba(10,20,70,.7);stroke-width:2;paint-order:stroke;pointer-events:none}
+.tap{display:inline-block;margin:6px 0 2px;background:var(--yellow);color:var(--navy);font-weight:900;font-size:14px;border-radius:99px;padding:7px 16px}
+.skip{display:block;margin:8px 0 0;font-size:12.5px;color:#aebcf5;text-decoration:underline}
+
+/* 지역을 고른 홈 */
+.bar{display:flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:12px 16px}
+.bar b{font-size:15px}.bar .ch{margin-left:auto;font-size:12.5px;color:var(--yellow);font-weight:800}
+.mini{display:flex;gap:12px;align-items:center;background:var(--navy);padding:0 16px 16px;color:#fff}
+.mini .m{width:96px;flex:0 0 96px}.mini .t{font-size:17px;font-weight:900;line-height:1.4}
+.intro{padding:18px 16px 4px;background:var(--soft)}.intro h1{margin:0 0 6px;font-size:24px;line-height:1.3;font-weight:900;color:var(--navy)}.intro h1 em{color:var(--main)}.intro p{margin:0 0 12px;color:var(--sub);font-size:14px}
+.ans{margin:12px 16px;padding:16px;border-radius:18px;background:var(--soft);font-size:16.5px;line-height:1.65;font-weight:700}
+.ans b{color:var(--main)}.ans.soft{font-weight:500;color:var(--sub)}
+.cnt{display:flex;gap:8px;margin:0 16px 8px}
+.cnt div{flex:1;padding:10px 8px;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(20,50,70,.09);text-align:center}
+.cnt b{display:block;font-size:22px;color:var(--main);font-weight:900}.cnt span{font-size:12px;color:var(--sub)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 16px}
+.tile{padding:14px;border-radius:18px;color:#fff;min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.tile .ic{font-size:24px}.tile b{font-size:15px;line-height:1.35;font-weight:800}.tile small{display:block;font-size:11.5px;font-weight:400;opacity:.92}
+.t1{background:var(--main)}.t2{background:var(--orange)}.t3{background:var(--navy)}.t4{background:var(--teal)}
+.grp{margin:14px 16px 4px;font-size:13px;font-weight:800;color:var(--main)}
+.q{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 14px;margin:7px 16px;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(20,50,70,.09);font-size:14.5px;font-weight:700;line-height:1.45}
+.q::after{content:'›';color:var(--sub);font-size:20px}
+.first{margin:16px;padding:14px;border-radius:16px;border:2px dashed #b9c8ff;font-size:14px}.first small{color:var(--sub)}
+
+/* 질문 화면 */
+.page{padding:6px 0 24px}
+.back{display:block;padding:10px 16px 2px;font-size:14px;color:var(--sub)}
+.qt{margin:4px 16px 10px;font-size:20px;font-weight:800;line-height:1.4}
+.where{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:0 16px 4px}
+.where a{color:var(--main);font-size:12.5px;font-weight:700}
+.note{margin:0 16px;font-size:12px;color:var(--sub)}
+.more{margin:7px 16px;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(20,50,70,.09);font-size:14.5px;font-weight:600}
+.more summary{padding:13px 14px;color:var(--main);cursor:pointer}.more p{margin:0;padding:0 14px 14px;color:var(--sub);font-weight:400}
+.next{margin:16px 16px 4px;font-size:13px;font-weight:800;color:var(--sub)}
+.nx{display:block;padding:11px 14px;margin:6px 16px;border-radius:12px;border:1px solid var(--line);font-size:14px}
+.ad{margin:22px 16px 6px;padding:12px;border:2px dashed var(--line);border-radius:14px;text-align:center;font-size:12.5px;color:var(--sub);position:relative}
+.ad i{position:absolute;top:-10px;left:12px;font-style:normal;background:var(--sub);color:#fff;border-radius:99px;padding:0 8px;font-size:11px}
+
+/* 시·군 고르는 창 */
+.sheet-bg{position:absolute;inset:0;background:rgba(10,20,50,.5);display:flex;align-items:flex-end;z-index:10}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:20px 16px 28px}
+.sheet h3{margin:0 0 12px;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:inherit;font-weight:700;font-size:15px;padding:10px 16px;border:0;border-radius:99px;background:var(--soft);color:var(--main);cursor:pointer}
+.chips button.ghost{background:#fff;border:1px solid var(--line);color:var(--sub)}
+
+/* 앱 설치 버튼 */
+.install{display:block;margin:6px auto 10px;font:inherit;font-size:14px;font-weight:800;border:0;border-radius:99px;padding:10px 20px;background:var(--navy);color:#fff;cursor:pointer}
+
+/* 내 정리 */
+.box{margin:12px 16px;padding:14px 0 6px;border-top:1px solid var(--line)}
+.box h3{margin:0 0 6px;font-size:16px}
+.box .note{margin:0 0 8px}
+.box .ans{margin:8px 0}
+.grade{display:block;margin:6px 0;font-weight:700;font-size:14px}
+.grade select,.subj input{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.subj{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subj label{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:700;color:var(--sub)}
+.subj input{width:100%}
+.btn{display:inline-block;margin:8px 16px;padding:11px 18px;border-radius:99px;background:var(--main);color:#fff;font-weight:800;font-size:14px}
+
+/* 학교 종류 버튼(펼침) */
+.kinds{margin:6px 0}
+.kind{margin:10px 16px;border-radius:18px;color:#fff;overflow:hidden}
+.kind summary{display:flex;align-items:center;gap:12px;padding:15px 14px;cursor:pointer;list-style:none}
+.kind summary::-webkit-details-marker{display:none}
+.kind summary::after{content:'⌄';font-size:20px;font-weight:900;transition:transform .15s}
+.kind[open] summary::after{transform:rotate(180deg)}
+.kind .ic{font-size:26px}
+.kind .kt{flex:1;min-width:0}.kind .kt b{display:block;font-size:17px;font-weight:900}.kind .kt small{display:block;font-size:12.5px;opacity:.92;line-height:1.4;margin-top:1px}
+.kind strong{font-size:18px;font-weight:900;white-space:nowrap}
+.kbody{padding:0 14px 12px}
+.kbody p{margin:0 0 8px;font-size:14px;line-height:1.55}
+.kind ul{list-style:none;margin:0;padding:0;background:rgba(255,255,255,.14);border-radius:12px}
+.kind li{padding:9px 12px;font-size:13.5px;line-height:1.5;border-bottom:1px solid rgba(255,255,255,.18)}.kind li:last-child{border:0}
+.kind li b{font-weight:800}.kind li em{font-style:normal;font-weight:800;margin-left:8px;background:rgba(255,255,255,.25);border-radius:99px;padding:0 8px;font-size:12px}
+.kind li span{display:block;opacity:.92}
+.kgo{display:block;text-align:right;padding:10px 2px 0;font-weight:800;font-size:13.5px}
+.kopen{font-weight:700;opacity:1!important}
+
+/* 학교 분류: 안쪽 세부 버튼 */
+.subs{margin:8px 0 4px}
+.kind.sub{margin:8px 0;background:rgba(255,255,255,.16)}
+.kind.sub summary{padding:11px 12px}.kind.sub .ic{font-size:21px}.kind.sub .kt b{font-size:15px}.kind.sub strong{font-size:15px}
+.kind.sub .kbody{padding:0 12px 10px}
+.law{margin:10px 0 0!important;font-size:12px!important;opacity:.85}
+.jg{margin:8px 0;padding:10px 10px 8px;border-radius:12px;background:rgba(255,255,255,.14)}
+.jg h4{margin:0;font-size:14.5px}.jg h4 em{font-style:normal;font-weight:800;margin-left:6px;background:rgba(255,255,255,.25);border-radius:99px;padding:0 8px;font-size:12px}
+.jg p{margin:2px 0 6px!important;font-size:12.5px!important;opacity:.92}
+.chips2,.names{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:5px}
+.chips2 li,.names li{background:rgba(255,255,255,.2);border-radius:99px;padding:3px 10px;font-size:12.5px;font-weight:700;border:0!important}
+.chips2 li small,.names li small{margin-left:4px;font-weight:400;opacity:.85;font-size:11px}
+.chips2 li.yes{background:#fff;color:var(--navy)}.chips2 li.no{opacity:.55}
+.kbody .note{color:inherit;opacity:.9;margin:6px 0 0;font-size:12px}
+
+/* 지도 위 "눌러 보세요" 손가락 (톡톡 누르는 동작 + 물결) */
+.mapwrap{position:relative;width:100%}
+.hint{position:absolute;left:58%;top:25%;width:0;height:0;pointer-events:none}
+.hint .hand{position:absolute;left:-14px;top:-6px;font-size:38px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4));animation:tapHand 1.8s ease-in-out infinite}
+.hint .ripple{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;border:3px solid var(--yellow);opacity:0;animation:tapRipple 1.8s ease-out infinite}
+@keyframes tapHand{0%,100%{transform:translate(8px,14px) scale(1)}35%{transform:translate(0,0) scale(.88)}50%{transform:translate(0,0) scale(.88)}75%{transform:translate(8px,14px) scale(1)}}
+@keyframes tapRipple{0%,32%{transform:scale(.3);opacity:0}38%{opacity:.95}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hint .hand,.hint .ripple{animation:none}.hint .ripple{opacity:.8}}
+
+.scroll>.hero:only-child{min-height:100%;box-sizing:border-box}
+.scroll>.hero:only-child{display:flex;flex-direction:column}
+.scroll>.hero:only-child .mapbox{flex:1;display:flex;align-items:flex-start;justify-content:center;margin:8px 18px 24px}
+.scroll>.hero:only-child .mapbox .map{width:100%}
+.install{display:flex;align-items:center;gap:6px}
+.install img{border-radius:6px;display:block}
+
+/* 아래 메뉴: 각진 선 아이콘 + 선택하면 위에 인디고 막대 */
+.nav{border-top:1px solid var(--line);background:#fff}
+.nav a{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 11px;font-size:12px;font-weight:500;color:#4A4866}
+.nav a .ni{width:24px;height:24px;display:block}
+.nav a.on{color:#3F3BD6;font-weight:700}
+.nav a.on::before{content:'';position:absolute;left:28%;right:28%;top:-1px;height:3px;background:#3F3BD6}
+.hint .hintTxt{animation:tapMove 1.8s ease-in-out infinite;position:absolute;left:26px;top:-4px;width:94px;text-align:center;background:#FFD24D;color:#1B1A3A;font-size:13px;font-weight:800;line-height:1.3;padding:8px 0;border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+.hint .hintTxt::before{content:'';position:absolute;top:50%;left:-5px;margin-top:-5px;border:5px solid transparent;border-left:0;border-right-color:#FFD24D}
+@keyframes tapMove{0%,100%{transform:translate(8px,14px)}35%{transform:translate(0,0)}50%{transform:translate(0,0)}75%{transform:translate(8px,14px)}}
+@media (prefers-reduced-motion:reduce){.hint .hintTxt{animation:none}}
+
+/* 여러 지역을 차례로 톡톡 누르는 손가락 (경기→강원→충북→충남→전북→전남→경남). 한 곳당 1.5초 */
+.hint{animation:hintWalk 10.5s linear infinite}
+@keyframes hintWalk{0%{left:58%;top:60%}3.57%{left:41%;top:21%}14.29%{left:41%;top:21%}17.86%{left:58%;top:17%}28.57%{left:58%;top:17%}32.14%{left:51%;top:35%}42.86%{left:51%;top:35%}46.43%{left:36%;top:39%}57.14%{left:36%;top:39%}60.71%{left:41%;top:53%}71.43%{left:41%;top:53%}75.00%{left:38%;top:67%}85.71%{left:38%;top:67%}89.29%{left:58%;top:60%}100%{left:58%;top:60%}}
+.hint .hand{animation:tapHand2 1.5s ease-in-out infinite}
+.hint .hintTxt{animation:tapMove2 1.5s ease-in-out infinite}
+.hint .ripple{animation:tapRipple2 1.5s ease-out infinite}
+@keyframes tapHand2{0%,25%{transform:translate(8px,14px) scale(1)}45%,60%{transform:translate(0,0) scale(.88)}85%,100%{transform:translate(8px,14px) scale(1)}}
+@keyframes tapMove2{0%,25%{transform:translate(8px,14px)}45%,60%{transform:translate(0,0)}85%,100%{transform:translate(8px,14px)}}
+@keyframes tapRipple2{0%,43%{transform:scale(.3);opacity:0}48%{opacity:.95}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hint{animation:none;left:58%;top:25%}.hint .hand,.hint .hintTxt{animation:none}.hint .ripple{animation:none;opacity:.8}}
+
+/* 한 번에 크게 옮겨 다니는 손가락: 서울 → 강원 → 경북 → 부산 → 제주 → 전남 → 충남. 오른쪽 끝 지역에서는 말풍선을 왼쪽에 둬요 */
+.hint{animation:hintWalk2 10.5s linear infinite}
+@keyframes hintWalk2{0%{left:36%;top:39%}3.57%{left:38%;top:21%}14.29%{left:38%;top:21%}17.86%{left:58%;top:17%}28.57%{left:58%;top:17%}32.14%{left:65%;top:42%}42.86%{left:65%;top:42%}46.43%{left:70%;top:62%}57.14%{left:70%;top:62%}60.71%{left:31%;top:95%}71.43%{left:31%;top:95%}75.00%{left:38%;top:67%}85.71%{left:38%;top:67%}89.29%{left:36%;top:39%}100%{left:36%;top:39%}}
+.hint .hintTxt.L{left:-120px}
+.hint .hintTxt.L::before{left:auto;right:-5px;border:5px solid transparent;border-right:0;border-left-color:#FFD24D;margin-top:-5px;top:50%}
+.hint .hintTxt.R{animation:tapMove2 1.5s ease-in-out infinite,showR 10.5s steps(1,end) infinite}
+.hint .hintTxt.L{animation:tapMove2 1.5s ease-in-out infinite,showL 10.5s steps(1,end) infinite}
+@keyframes showR{0.00%{opacity:1}14.29%{opacity:1}28.57%{opacity:0}42.86%{opacity:0}57.14%{opacity:1}71.43%{opacity:1}85.71%{opacity:1}100%{opacity:1}}
+@keyframes showL{0.00%{opacity:0}14.29%{opacity:0}28.57%{opacity:1}42.86%{opacity:1}57.14%{opacity:0}71.43%{opacity:0}85.71%{opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.hint .hintTxt.L{display:none}.hint .hintTxt.R{animation:none}}
+
+/* 부드럽게 옮겨 다니는 손가락: 서울 → 강원 → 경북 → 부산 → 전남 → 충남. 한 곳당 2.2초(이동 45% + 톡 누르기) */
+.hint{animation:hintWalk3 13.2s ease-in-out infinite}
+@keyframes hintWalk3{0%{left:36%;top:39%}7.50%{left:38%;top:21%}16.67%{left:38%;top:21%}24.17%{left:58%;top:17%}33.33%{left:58%;top:17%}40.83%{left:65%;top:42%}50.00%{left:65%;top:42%}57.50%{left:70%;top:62%}66.67%{left:70%;top:62%}74.17%{left:38%;top:67%}83.33%{left:38%;top:67%}90.83%{left:36%;top:39%}100%{left:36%;top:39%}}
+.hint .hand{animation:tapHand3 2.2s ease-in-out infinite}
+.hint .ripple{animation:tapRipple3 2.2s ease-out infinite}
+.hint .hintTxt.R{animation:tapMove3 2.2s ease-in-out infinite,showR3 13.2s steps(1,end) infinite}
+.hint .hintTxt.L{animation:tapMove3 2.2s ease-in-out infinite,showL3 13.2s steps(1,end) infinite}
+@keyframes tapHand3{0%,45%{transform:translate(8px,14px) scale(1)}58%,70%{transform:translate(0,0) scale(.88)}88%,100%{transform:translate(8px,14px) scale(1)}}
+@keyframes tapMove3{0%,45%{transform:translate(8px,14px)}58%,70%{transform:translate(0,0)}88%,100%{transform:translate(8px,14px)}}
+@keyframes tapRipple3{0%,56%{transform:scale(.3);opacity:0}61%{opacity:.95}100%{transform:scale(1.9);opacity:0}}
+@keyframes showR3{0%{opacity:1}7.50%{opacity:1}24.17%{opacity:1}40.83%{opacity:0}57.50%{opacity:0}74.17%{opacity:1}90.83%{opacity:1}}
+@keyframes showL3{0%{opacity:0}7.50%{opacity:0}24.17%{opacity:0}40.83%{opacity:1}57.50%{opacity:1}74.17%{opacity:0}90.83%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.hint{animation:none;left:58%;top:25%}.hint .hand,.hint .hintTxt.R{animation:none}.hint .hintTxt.L{display:none}.hint .ripple{animation:none;opacity:.8}}
+
+/* 시·군·구 지도 (평준화 색) */
+.pick .sub{margin:0 16px 6px;font-size:14px;color:#4A4866}.pick .sub b{color:#3F3BD6}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 16px 4px;font-size:13px;font-weight:700}
+.legend .sw{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.submapbox{margin:6px 12px}
+.submap{width:100%;display:block}
+.lv{stroke:#fff;stroke-width:1.2;cursor:pointer}
+.lv-flat{fill:#3F3BD6;background:#3F3BD6}.lv-non{fill:#FF6B4A;background:#FF6B4A}.lv-partial{fill:url(#stripe)}.lv-special{fill:#1B1A3A}.lv-unknown{fill:#B8B6D0}
+.legend .lv-partial{background:repeating-linear-gradient(45deg,#3F3BD6 0 4px,#FF6B4A 4px 8px)}.legend .lv-special{background:#1B1A3A}.legend .lv-unknown{background:#B8B6D0}
+.lv:hover,.lv:active{opacity:.82}
+.submap text{fill:#fff;font-weight:800;text-anchor:middle;dominant-baseline:middle;stroke:rgba(10,10,40,.75);stroke-width:2.4;paint-order:stroke;pointer-events:none}
+.whole{display:block;margin:12px 16px 0;width:calc(100% - 32px);font:inherit;font-weight:800;font-size:14px;padding:12px;border:1px solid var(--line);background:#fff;color:#4A4866;border-radius:8px;cursor:pointer}
+
+/* 지도를 누르면 나오는 안내 카드 */
+.peek{display:flex;align-items:center;gap:10px;margin:8px 16px;padding:12px;border-radius:8px;background:#F4F3EF;border:1px solid #E2E0EA;min-height:64px}
+.peek.empty{justify-content:center;color:#4A4866;font-weight:700;font-size:14px}
+.peek .sw{flex:0 0 14px;width:14px;height:44px;border-radius:3px}
+.peek .pt{flex:1;min-width:0;line-height:1.35}.peek .pt b{display:block;font-size:17px;font-weight:900;color:#1B1A3A}
+.peek .lvname{display:inline-block;font-size:14px;font-weight:800}.lvt-flat{color:#3F3BD6}.lvt-non{color:#C2432A}.lvt-partial,.lvt-special{color:#1B1A3A}.lvt-unknown{color:#4A4866}
+.peek .pt small{display:block;font-size:12.5px;color:#4A4866}
+.peek button{flex:0 0 auto;font:inherit;font-weight:800;font-size:14px;padding:10px 14px;border:0;border-radius:8px;background:#3F3BD6;color:#fff;cursor:pointer}
+.lv.picked{stroke:#1B1A3A;stroke-width:3}
+.peek .sw.lv-flat{background:#3F3BD6}.peek .sw.lv-non{background:#FF6B4A}.peek .sw.lv-partial{background:repeating-linear-gradient(45deg,#3F3BD6 0 4px,#FF6B4A 4px 8px)}.peek .sw.lv-special{background:#1B1A3A}.peek .sw.lv-unknown{background:#B8B6D0}
+
+
+/* 지도에 손이나 마우스를 대면 안내 손가락·말풍선은 사라져요 */
+.hint{transition:opacity .2s}
+.mapwrap:hover .hint{opacity:0}
+body.nohint .hint{display:none}
+
+/* 지도는 글씨 바로 아래에 붙이고, 키가 작은 폰에서는 화면 안에 다 들어오게 줄여요 */
+.scroll>.hero:only-child .mapwrap{width:min(100%,calc((100dvh - 300px) * .943));min-width:240px}
+
+/* 모든 화면에 고정되는 윗줄 (로고 + 홈 버튼) */
+.gh{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;background:#fff;border-bottom:1px solid #E2E0EA}
+.gh .ghlogo{display:flex;align-items:center}.gh img{display:block;height:22px;width:auto}
+.gh .ghhome{display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:800;color:#3F3BD6;padding:6px 4px}
+.gh .ghhome svg{width:20px;height:20px}
+
+
+/* 윗줄 개편: 왼쪽 로고+홈 아이콘, 오른쪽 돌아가기 */
+.gh .ghl{display:flex;align-items:center;gap:6px}
+.gh .ghhome{padding:6px 6px 6px 4px}.gh .ghhome svg{width:22px;height:22px;display:block}
+.gh .ghback{display:flex;align-items:center;gap:4px;font-size:13.5px;font-weight:800;color:#3F3BD6;padding:6px 4px;cursor:pointer}
+.gh .ghback svg{width:18px;height:18px}
+
+/* 메인 화면 아래: 학교 종류 / 배정·선발 방법 / 일정 */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px}
+.pillars a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px 10px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;text-align:center}
+.pillars .ni{width:28px;height:28px;color:#FFD24D}
+.pillars b{font-size:14px;font-weight:800;line-height:1.25}
+.pillars small{font-size:11.5px;opacity:.85;line-height:1.3}
+.scroll>.hero:only-child .mapbox{margin-bottom:12px}
+.scroll>.hero:only-child .mapwrap{width:min(100%,calc((100dvh - 440px) * .943))}
+
+.tx{background:#4A4866}
+
+.chips2 li .tg{margin-left:4px;padding:0 5px;border-radius:4px;background:rgba(255,255,255,.28);font-weight:800;opacity:1}
+
+.plist{margin:6px 0 0;padding:0 0 0 16px;font-size:12.5px;line-height:1.5}.plist li{margin:3px 0}
+
+/* 학교 이름 링크 */
+.chips2 li a,.names li a{color:inherit;text-decoration:none}
+/* 학교 정보 화면 */
+.sch .shero{padding:16px;background:#1B1A3A;color:#fff}
+.sch .shero h1{margin:0 0 8px;font-size:22px;font-weight:900;line-height:1.3}
+.sch .tags{display:flex;flex-wrap:wrap;gap:6px}.sch .tags span{font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(255,255,255,.16)}
+.sch .sec{margin:14px 16px 0;padding:14px;border:1px solid #E2E0EA;border-radius:8px}
+.sch .sec h2{margin:0 0 8px;font-size:15px;font-weight:900}
+.sch .range{background:#EEEDFB;border-color:#d8d6f5}.sch .rg{margin:0}.sch .rg b{color:#3F3BD6}
+.sch .kv{display:grid;grid-template-columns:84px 1fr;gap:6px 8px;font-size:14px;margin:0}.sch .kv dt{color:#4A4866;font-weight:700}.sch .kv dd{margin:0}
+.sch .big{display:flex;gap:8px;margin-bottom:10px}.sch .big div{flex:1;text-align:center;padding:10px 4px;border-radius:8px;background:#F4F3EF}.sch .big b{display:block;font-size:19px;color:#3F3BD6;font-weight:900}.sch .big span{font-size:12px;color:#4A4866}
+.sch .a{color:#3F3BD6;font-weight:800;word-break:break-all}
+.sch .note{margin:6px 0 0;font-size:12.5px;color:#4A4866}
+.sch .chips2 li{background:#F4F3EF;color:#1B1A3A}
+.sch .src{margin:12px 16px 20px;font-size:12px;color:#4A4866}
+
+/* 학교 찾기 */
+.find .fform{margin:0 16px 8px}
+.find input[type=search]{width:100%;font:inherit;padding:12px 14px;border:1px solid #E2E0EA;border-radius:8px;background:#fff}
+.find .frow{display:flex;gap:8px;margin-top:8px}
+.find select{flex:1;font:inherit;padding:10px 8px;border:1px solid #E2E0EA;border-radius:8px;background:#fff;min-width:0}
+.find #fres{margin:0 16px}
+.find .fcount{margin:10px 0 6px;font-size:13.5px;color:#4A4866}.find .fcount b{color:#3F3BD6}
+.find .srow{display:block;padding:11px 12px;margin:6px 0;border:1px solid #E2E0EA;border-radius:8px;background:#fff}
+.find .srow b{display:block;font-size:15px}.find .srow small{color:#4A4866;font-size:12.5px}
+.find .note{margin:10px 0;font-size:13px;color:#4A4866}
+
+/* 후보 학교 담기 */
+.sch .shead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.sch .shead h1{margin:0}
+.candbtn{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;cursor:pointer}
+.candbtn .ni{width:22px;height:22px;display:block}
+.candbtn.on{background:#fff;color:#3F3BD6;border-color:#fff}
+#toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:#1B1A3A;color:#fff;font-size:13.5px;font-weight:700;padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.show{opacity:1}
+.box h3 small{font-size:12.5px;font-weight:800;color:#3F3BD6;margin-left:4px}
+.crow{display:flex;align-items:center;gap:8px;margin:6px 0;padding:10px 12px;border:1px solid #E2E0EA;border-radius:8px;background:#fff}
+.crow a{flex:1;min-width:0}.crow b{display:block;font-size:15px}.crow small{color:#4A4866;font-size:12.5px}
+.crow button{flex:0 0 auto;font:inherit;font-size:12.5px;font-weight:800;color:#4A4866;background:#F4F3EF;border:0;border-radius:6px;padding:7px 10px;cursor:pointer}
+
+/* 학기별 성취도 입력 */
+.semwrap{overflow-x:auto;margin:8px 0}
+table.sem{width:100%;border-collapse:collapse;font-size:12.5px}
+table.sem th,table.sem td{padding:5px 2px;text-align:center}
+table.sem thead th{font-weight:800;color:#1B1A3A;line-height:1.25;font-size:12px}
+table.sem thead th.lock{color:#B8B6D0}
+table.sem tbody th{text-align:left;font-weight:800;padding-right:6px;white-space:nowrap}
+table.sem select{width:100%;min-width:44px;font:inherit;font-weight:800;padding:8px 2px;border:1px solid #E2E0EA;border-radius:6px;background:#fff;color:#3F3BD6;text-align-last:center}
+table.sem select:disabled{background:#F4F3EF;color:#B8B6D0}
+
+/* 비공식 고지 */
+.mininotice{margin:8px 0 0;text-align:center;font-size:11px;line-height:1.4;color:#8f8fae;text-wrap:balance;word-break:keep-all}
+.legal{margin:20px 16px 24px;padding-top:14px;border-top:1px solid #E2E0EA;font-size:11.5px;line-height:1.6;color:#6b6985}
+.legal h2{margin:0 0 6px;font-size:12.5px;font-weight:800;color:#4A4866}
+.legal h3{margin:10px 0 2px;font-size:11.5px;font-weight:800;color:#4A4866}
+.legal p{margin:0}.legal ul{margin:0;padding-left:16px}.legal li{margin:1px 0}
+
+/* 어떻게 뽑아요? */
+.kbody h4.sh{margin:12px 0 4px;font-size:13px;font-weight:900;opacity:.95}
+.kbody .ways,.kbody .rules,.kbody .steps{margin:0;padding-left:0;list-style:none;font-size:13.5px;line-height:1.55}
+.kbody .ways li{margin:6px 0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.14)}.kbody .ways li>b{display:block}.kbody .ways li>span{display:block;opacity:.95}
+.kbody .steps{counter-reset:s}.kbody .steps li{counter-increment:s;margin:4px 0;padding-left:26px;position:relative}.kbody .steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:19px;height:19px;border-radius:4px;background:rgba(255,255,255,.28);text-align:center;font-size:12px;font-weight:900;line-height:19px}
+.kbody .rules li{margin:5px 0;padding-left:14px;position:relative}.kbody .rules li::before{content:'•';position:absolute;left:3px}
+.kbody .where{margin-top:12px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.2);font-weight:700;font-size:13px}
+
+/* 원서는 언제 내요? */
+.tlband{margin:16px 16px 6px;font-size:13px;font-weight:900;color:#3F3BD6}
+.tl{list-style:none;margin:0 16px;padding:0;border-left:2px solid #E2E0EA}
+.tl li{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px -2px;padding-left:10px}
+.tl .tm{flex:0 0 66px;text-align:center;font-size:12.5px;font-weight:900;color:#fff;background:#3F3BD6;border-radius:6px;padding:4px 2px;margin-top:2px}
+.tl b{display:block;font-size:14.5px}.tl p{margin:2px 0 0;font-size:13px;line-height:1.5;color:#4A4866}
+
+/* 일정 한눈에 보기 (월별 표) */
+.gantt{margin:12px 16px 4px;padding:12px 8px 10px;border:1px solid #E2E0EA;border-radius:8px;background:#fff}
+.gantt .tlband{margin:0 4px 8px}
+.gantt .gr{display:grid;grid-template-columns:86px repeat(10,1fr);align-items:center;gap:2px;margin:3px 0}
+.gantt .gl{font-size:11.5px;font-weight:800;line-height:1.25;padding-right:4px;word-break:keep-all}
+.gantt .gm{font-size:10.5px;color:#4A4866;text-align:center;font-weight:700}
+.gantt .gc{height:20px;border-radius:3px;background:#F4F3EF}
+.gantt .gc.on-a{background:#3F3BD6}
+.gantt .gc.on-b{background:#9a97ee}
+.gantt .gy{display:grid;grid-template-columns:86px 8fr 2fr;gap:2px;font-size:10.5px;font-weight:800;color:#4A4866;text-align:center}
+.gantt .gy .y1{border-bottom:2px solid #1B1A3A}.gantt .gy .y2{border-bottom:2px solid #FF6B4A}
+.glegend{margin:8px 4px 0;font-size:11.5px;color:#4A4866}.glegend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin:0 4px -1px 8px;vertical-align:baseline}
+.glegend .on-a{background:#3F3BD6}.glegend .on-b{background:#9a97ee}
+
+/* 지역 화면: 갈 수 있는 고등학교 7가지 */
+.rh{margin:18px 16px 8px;font-size:16px;font-weight:900}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px}
+.rt{font:inherit;text-align:left;border:0;border-radius:10px;padding:12px 12px 10px;color:#fff;cursor:pointer;display:flex;flex-direction:column;gap:1px;min-height:92px;border:2px solid transparent}
+.rt.wide{grid-column:1 / -1;min-height:76px}
+.rt .rn{font-size:30px;font-weight:900;line-height:1.1}.rt .rn small{font-size:14px;font-weight:800;margin-left:2px}
+.rt b{font-size:14.5px;font-weight:900}.rt>small{font-size:11.5px;opacity:.9;line-height:1.3}
+.rt.t1{background:#3F3BD6}.rt.t3{background:#1B1A3A}.rt.t4{background:#0FA3A3}
+.rt.sel{border-color:#FF6B4A;box-shadow:0 0 0 2px #FF6B4A33}
+.rpanel{margin:10px 16px 0;padding:12px;border:1px solid #E2E0EA;border-radius:10px;background:#fff}
+.rpanel h3{margin:0 0 6px;font-size:15px;font-weight:900}.rpanel h3 em{font-style:normal;color:#3F3BD6;margin-left:4px}
+.rpanel .chips2 li{background:#F4F3EF;color:#1B1A3A}.rpanel .note{margin:4px 0 8px;font-size:12.5px;color:#4A4866}
+.rhint{margin:8px 16px 0}
+.rsoon{margin:0 16px;padding:12px;border:1px dashed #E2E0EA;border-radius:8px;background:#F4F3EF;font-size:13.5px;color:#4A4866}
+
+/* 지역 화면: 갈 수 있는 이유별 묶음 */
+.rpanel .rg{margin:10px 0 0;padding:10px;border-radius:8px;background:#F4F3EF}
+.rpanel .rg h4{margin:0 0 3px;font-size:13.5px;font-weight:900}.rpanel .rg h4 em{font-style:normal;color:#3F3BD6;margin-left:4px;font-size:12.5px}
+.rpanel .rg .rreason{margin:0 0 6px;font-size:12.5px;color:#4A4866;line-height:1.5}
+.rpanel .rg .chips2 li{background:#fff}
+
+.chips2 li .tg.nat{background:#FF6B4A;color:#1B1A3A}
+
+/* 지역 화면: 일정 (한눈에 + 날짜 자세히) */
+.sg{margin:0 12px;padding:10px 8px 8px;border:1px solid #E2E0EA;border-radius:8px}
+.sh{display:flex;align-items:flex-end;height:16px;margin-bottom:2px}.sl{flex:0 0 92px;font-size:11px;font-weight:800;line-height:1.2;padding-right:4px}
+.smw{position:relative;flex:1;height:14px}.sm{position:absolute;top:0;font-style:normal;font-size:10.5px;color:#4A4866;font-weight:800}
+.sr{display:flex;align-items:center;margin:4px 0}
+.st{position:relative;flex:1;height:20px;background:#F4F3EF;border-radius:3px}.svl{position:absolute;top:0;bottom:0;width:1px;background:#d9d6e6}
+.sbar{position:absolute;top:3px;height:14px;background:#3F3BD6;border-radius:3px}
+.sdot{position:absolute;top:5px;width:10px;height:10px;margin-left:-5px;background:#FF6B4A;border-radius:2px;transform:rotate(45deg)}
+.stoday{position:absolute;top:-3px;bottom:-3px;width:2px;background:#1B1A3A}
+.slg{margin:8px 4px 0;font-size:11.5px;color:#4A4866}.slg i{display:inline-block;margin:0 4px 0 8px;vertical-align:-1px}
+.slg .a{width:12px;height:10px;border-radius:2px;background:#3F3BD6}.slg .b{width:9px;height:9px;border-radius:2px;background:#FF6B4A;transform:rotate(45deg)}.slg .c{width:2px;height:12px;background:#1B1A3A}
+.slist{margin:8px 16px 0}.sli{padding:9px 0;border-bottom:1px solid #E2E0EA}.sli b{display:block;font-size:14px}.sli span{font-size:12.5px;color:#4A4866;line-height:1.5}
+.rsrc{margin:8px 16px 0}
+.rsoon{margin:10px 16px 0}
+
+/* 지역 화면: 학교 비교표 */
+.rhn{font-style:normal;color:#3F3BD6;font-size:14px;margin-left:4px}
+.cmphint{margin:0 16px 6px;font-size:12px;color:#4A4866}
+.cmp{overflow-x:auto;border-top:1px solid #E2E0EA;border-bottom:1px solid #E2E0EA}
+.cmp table{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+.cmp thead th{position:sticky;top:0;background:#F4F3EF;font-weight:800;padding:8px;text-align:center;white-space:nowrap;border-bottom:1px solid #E2E0EA}
+.cmp thead th:first-child{text-align:left;left:0;z-index:2;min-width:96px}
+.cmp tbody th{position:sticky;left:0;background:#fff;text-align:left;font-weight:800;padding:8px;border-bottom:1px solid #E2E0EA;border-right:1px solid #E2E0EA;z-index:1;min-width:96px}
+.cmp tbody th a{color:#1B1A3A}.cmp tbody th small{display:block;font-weight:400;color:#4A4866;font-size:11px}
+.cmp tbody td{padding:8px;border-bottom:1px solid #E2E0EA;text-align:center;white-space:nowrap}
+.cmp td.n{position:relative;text-align:right;min-width:64px}.cmp td.n b{position:relative;font-weight:700}
+.cmp .bar{position:absolute;left:0;top:6px;bottom:6px;background:#E5E4FA;border-radius:3px}
+.cmpnote{margin:8px 16px 18px}
+.cmp tr.grp th{background:#F4F3EF;font-size:12px;color:#4A4866;white-space:nowrap}.cmp tr.grp td{background:#F4F3EF;border-bottom:1px solid #E2E0EA}
+
+/* 내 정리: 학기별 점수 입력과 경기 교과 점수 */
+.stabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px}
+.stab{font:inherit;font-size:13px;font-weight:800;padding:7px 10px;border:1px solid #E2E0EA;border-radius:6px;background:#fff;color:#1B1A3A}
+.stab.on{background:#3F3BD6;border-color:#3F3BD6;color:#fff}
+table.scf{width:100%;border-collapse:collapse;font-size:13px}
+table.scf th,table.scf td{padding:4px 3px;text-align:center}
+table.scf thead th{font-size:12px;color:#4A4866}
+table.scf tbody th{text-align:left;font-weight:800;white-space:nowrap;padding-right:8px}
+table.scf tr.sep th{background:#F4F3EF;font-size:12px;color:#4A4866;padding:5px 6px}
+table.scf input,table.scf select{width:100%;font:inherit;font-weight:800;padding:8px 4px;border:1px solid #E2E0EA;border-radius:6px;background:#fff;color:#3F3BD6;text-align:center;text-align-last:center}
+table.scf td.dash{color:#B8B6D0}
+table.scr{width:100%;border-collapse:collapse;font-size:14px}
+table.scr th{text-align:left;font-weight:700;padding:6px 0;border-bottom:1px solid #E2E0EA}
+table.scr td{text-align:right;padding:6px 0 6px 8px;border-bottom:1px solid #E2E0EA;font-variant-numeric:tabular-nums}
+table.scr tr.tot th,table.scr tr.tot td{font-weight:900;color:#3F3BD6;border-bottom:0}
+table.scf{table-layout:fixed}table.scf col.c1{width:84px}table.scf input,table.scf select{min-width:0;box-sizing:border-box}
+table.scf.etc{margin-top:8px}table.scf.etc thead th{font-size:11.5px;line-height:1.25}table.scf td.unit{text-align:left;font-size:11.5px;color:#4A4866;padding-left:6px}
+.kbody .steps li{display:flex;align-items:center;gap:10px;padding-left:0}.kbody .steps li::before{position:static;flex:none;top:auto}
+.sh2{margin:16px 0 4px;font-size:14px;font-weight:900}.sh2 small{font-weight:600;color:#4A4866;font-size:12px}
+/* 점수 계산 방식 ⓘ */
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.hrow h3,.hrow h4{margin:0}
+details.why{display:contents}
+details.why>summary{list-style:none;cursor:pointer;width:20px;height:20px;border-radius:50%;border:1px solid #B8B6D0;color:#4A4866;font-size:13px;line-height:18px;text-align:center;font-weight:800;user-select:none}
+details.why>summary::-webkit-details-marker{display:none}
+details.why[open]>summary{background:#3F3BD6;border-color:#3F3BD6;color:#fff}
+.whybody{flex-basis:100%;margin:6px 0 10px;padding:10px 12px;border-radius:8px;background:#F4F3EF;font-size:12.5px;line-height:1.6;color:#1B1A3A}
+.whybody p{margin:0 0 8px;font-size:12.5px}.whybody h5{margin:10px 0 4px;font-size:13px;font-weight:900}.whybody ul{margin:0 0 8px;padding-left:18px}.whybody li{margin:2px 0}.whybody .note{margin:4px 0 0;font-size:11.5px}
+.faqhint{margin:0 16px 4px}h3.tg{margin:16px 16px 4px;font-size:13px;font-weight:900;color:#4A4866}
+
+/* 앱 설치 안내 창 */
+#pwahelp{position:fixed;inset:0;z-index:50;background:rgba(27,26,58,.55);display:flex;align-items:flex-end;justify-content:center}
+#pwahelp .phbox{width:100%;max-width:520px;background:#fff;border-radius:14px 14px 0 0;padding:20px 18px 24px;box-shadow:0 -6px 24px rgba(0,0,0,.2)}
+#pwahelp h3{margin:0 0 10px;font-size:16px;font-weight:900;color:#1B1A3A}
+#pwahelp ol{margin:0 0 14px;padding-left:20px;font-size:14px;line-height:1.7;color:#1B1A3A}
+#pwahelp li{margin:3px 0}
+#pwahelp button{width:100%;font:inherit;font-weight:800;padding:12px;border:0;border-radius:8px;background:#3F3BD6;color:#fff}
