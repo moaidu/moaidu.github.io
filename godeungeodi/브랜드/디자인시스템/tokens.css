@@ -1,0 +1,54 @@
+/* 고등어디 — generated from tokens.json */
+:root {
+  --ink: #1B1A3A;
+  --muted: #4A4866;
+  --coral: #FF6B4A;
+  --indigo: #3F3BD6;
+  --on-indigo: #FFFFFF;
+  --paper: #F4F3EF;
+  --surface: #FFFFFF;
+  --line: #E2E0EA;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-icon: 22.5%;
+  --logo-min-width: 80px;
+  --symbol-min-size: 20px;
+  --logo-clear-space: 50%;
+  --font-sans: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #F2F1FA;
+    --muted: #B8B6D0;
+    --coral: #FF7A5C;
+    --indigo: #8F8CFF;
+    --on-indigo: #17162B;
+    --paper: #17162B;
+    --surface: #222140;
+    --line: #33315A;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #F2F1FA;
+  --muted: #B8B6D0;
+  --coral: #FF7A5C;
+  --indigo: #8F8CFF;
+  --on-indigo: #17162B;
+  --paper: #17162B;
+  --surface: #222140;
+  --line: #33315A;
+}
+.display { font-family: var(--font-sans); font-size: 40px; line-height: 52px; font-weight: 700; letter-spacing: -0.5px; }
+.heading { font-family: var(--font-sans); font-size: 28px; line-height: 38px; font-weight: 700; }
+.title { font-family: var(--font-sans); font-size: 20px; line-height: 28px; font-weight: 700; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 26px; font-weight: 400; }
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 18px; font-weight: 500; letter-spacing: 0.2px; }
