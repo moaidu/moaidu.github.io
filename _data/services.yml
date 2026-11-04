@@ -6,3 +6,7 @@
   tag: 고교 선택 앱
   desc: 나에게 맞는 고등학교를 고르는 앱
   url: "/apps/#godeungeodi"
+- name: 초등 첫걸음
+  tag: 입학 준비 가이드
+  desc: 초등학교 입학이 걱정되는 부모를 위한 안내
+  url: "/apps/#ipak"

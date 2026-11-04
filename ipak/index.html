@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B1A3A">
+<title>초등 첫걸음 · 입학 걱정 덜어드려요</title>
+<meta name="description" content="초등학교 입학이 걱정되는 부모를 위한 안내. 시기별 할 일, 걱정별 답, 우리 아이 준비도 점검까지 한 곳에서.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1B1A3A;--muted:#4A4866;--coral:#FF6B4A;--indigo:#3F3BD6;--paper:#F4F3EF;--surface:#fff;--line:#E2E0EA;--soft:#ECEBFB;--ok:#0FA37A;--on-ink:#fff}
+@media (prefers-color-scheme:dark){:root{--ink:#F2F1FA;--muted:#B8B6D0;--coral:#FF7A5C;--indigo:#9A97FF;--paper:#17162B;--surface:#222140;--line:#33315A;--soft:#2B2A52;--ok:#3DD6A6;--on-ink:#17162B}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 "Noto Sans KR",system-ui,sans-serif;letter-spacing:-.02em}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 80px}
+a{color:var(--indigo)}
+header.hero{background:#1B1A3A;color:#fff;padding:28px 16px 32px}
+.hero .in{max-width:720px;margin:0 auto}
+.hero .back{font-size:13px;color:#C9C7F5;text-decoration:none}
+.hero h1{margin:14px 0 8px;font-size:30px;line-height:1.3;font-weight:900;letter-spacing:-.04em}
+.hero h1 em{font-style:normal;color:#FFC857}
+.hero p{margin:0;color:#DAD8F7;font-size:15px}
+.dday{margin-top:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:rgba(255,255,255,.1);border-radius:16px;padding:14px 16px}
+.dday .n{font-size:34px;font-weight:900;color:#FFC857;line-height:1}
+.dday .t{font-size:14px;color:#E9E8FB}
+.dday label{margin-left:auto;font-size:12.5px;color:#C9C7F5}
+select,input[type=number]{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 16px;overflow-x:auto;max-width:none}
+nav.tabs button{flex:0 0 auto;font:inherit;font-size:14px;font-weight:700;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected=true]{background:var(--indigo);border-color:var(--indigo);color:var(--on-ink)}
+.tabbar{max-width:720px;margin:0 auto;display:flex;gap:6px}
+section.pane{display:none;padding-top:20px}
+section.pane.on{display:block}
+h2{font-size:21px;margin:0 0 4px;font-weight:900}
+.lead{color:var(--muted);margin:0 0 16px;font-size:14.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.stage{margin-bottom:18px}
+.stage h3{margin:0 0 2px;font-size:16.5px}
+.stage .when{font-size:12.5px;font-weight:700;color:var(--coral)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-bottom:1px dashed var(--line);cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk input{width:20px;height:20px;margin-top:3px;accent-color:var(--indigo);flex:0 0 auto}
+.chk span small{display:block;color:var(--muted);font-size:13px;line-height:1.5}
+.chk input:checked+span b{color:var(--muted);text-decoration:line-through}
+details{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:700;display:flex;gap:10px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"＋";margin-left:auto;color:var(--indigo);font-weight:900}
+details[open] summary::after{content:"－"}
+details .body{padding:0 16px 16px;font-size:15px}
+details .body p{margin:0 0 10px}
+details .body ul{margin:0 0 10px;padding-left:20px}
+.ans{background:var(--soft);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-weight:500}
+.result{background:var(--soft);border-radius:16px;padding:16px;margin-top:12px;display:none}
+.result.on{display:block}
+.result b.big{font-size:22px;color:var(--indigo)}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.note{font-size:12.5px;color:var(--muted);margin-top:28px;line-height:1.6}
+.links a{display:inline-block;margin:4px 8px 4px 0;font-size:14px}
+.grp{font-size:13px;font-weight:800;color:var(--indigo);margin:16px 0 4px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="in">
+    <a class="back" href="../">← 지니의 제작노트</a>
+    <h1>초등 입학,<br><em>생각보다 괜찮아요</em></h1>
+    <p>처음이라 막막한 부모님을 위해, 언제 뭘 하면 되는지 순서대로 정리했어요.</p>
+    <div class="dday">
+      <div><div class="n" id="dn">D-0</div><div class="t" id="dt"></div></div>
+      <label>아이 출생연도 <select id="by"></select></label>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs"><div class="tabbar" role="tablist">
+  <button role="tab" data-t="plan" aria-selected="true">📅 할 일</button>
+  <button role="tab" data-t="worry" aria-selected="false">💭 걱정 Q&amp;A</button>
+  <button role="tab" data-t="skill" aria-selected="false">🎒 준비도 점검</button>
+  <button role="tab" data-t="gear" aria-selected="false">✏️ 준비물</button>
+</div></nav>
+
+<main class="wrap">
+
+<section class="pane on" id="plan">
+  <h2>시기별 할 일</h2>
+  <p class="lead">체크하면 이 기기에 저장돼요. 날짜와 세부 절차는 지역·학교마다 달라서, 꼭 학교 안내를 함께 확인해 주세요.</p>
+  <div class="card">
+    <b id="pt">0 / 0 완료</b>
+    <div class="bar"><i id="pb"></i></div>
+  </div>
+  <div id="stages"></div>
+</section>
+
+<section class="pane" id="worry">
+  <h2>걱정별 답</h2>
+  <p class="lead">많은 부모님이 가장 많이 묻는 것들이에요. 눌러서 펼쳐 보세요.</p>
+  <div id="worries"></div>
+</section>
+
+<section class="pane" id="skill">
+  <h2>우리 아이 준비도 점검</h2>
+  <p class="lead">점수를 매기려는 게 아니에요. 입학 전에 같이 연습해 보면 좋은 것을 찾는 용도예요. "혼자 할 수 있다"에 체크하세요.</p>
+  <div class="card" id="skills"></div>
+  <button class="btn" id="skreset">처음부터 다시</button>
+  <div class="result" id="skres"></div>
+</section>
+
+<section class="pane" id="gear">
+  <h2>준비물</h2>
+  <p class="lead">요즘은 학용품을 학교에서 주는 곳이 많아요. 집에서는 가방·실내화·물병 정도만 챙기면 돼요. 정확한 건 신입생 안내문으로 확인하세요.</p>
+  <div class="card" id="gears"></div>
+</section>
+
+<div class="card links" style="margin-top:20px">
+  <b>공식 확인처</b><br>
+  <a href="https://www.schoolinfo.go.kr" target="_blank" rel="noopener">학교알리미</a>
+  <a href="https://www.gov.kr" target="_blank" rel="noopener">정부24 (취학통지서·전입)</a>
+  <a href="https://nip.kdca.go.kr" target="_blank" rel="noopener">예방접종도우미</a>
+  <a href="https://www.neis.go.kr" target="_blank" rel="noopener">나이스 대국민서비스</a>
+</div>
+
+<p class="note">이 페이지는 일반적인 흐름을 정리한 참고용 안내예요. 취학통지·예비소집·돌봄(늘봄)·방과후 신청 일정과 방법은 시·도교육청과 학교마다 달라요. 정확한 내용은 배정 학교의 공지와 교육청 안내를 꼭 확인해 주세요.</p>
+</main>
+
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+
+/* ---------- 데이터 ---------- */
+var STAGES=[
+ {t:"입학 전 해 가을~11월",w:"지금부터",items:[
+  ["배정 학교 확인하기","주소지 기준 배정이 보통이에요. 이사 계획이 있다면 전입 시기를 미리 따져 보세요. 학교알리미·교육청 안내 참고."],
+  ["학교까지 걸어가 보기","아이와 직접 걸으며 횡단보도·신호등·위험한 곳을 같이 확인하고, 시간을 재 보세요."],
+  ["영유아 건강검진 마지막 차수 확인","학령기 직전 검진을 놓치지 않았는지 확인해요."],
+  ["예방접종 기록 점검","입학 전 필수 접종(DTaP, 폴리오, MMR 등 학령기 추가접종)을 확인해요. 빠진 게 있으면 소아과에서 상담받으세요."]]},
+ {t:"12월~1월 초",w:"통지·예비소집",items:[
+  ["취학통지서 받기","보통 12월에 우편·전자 방식으로 와요. 이름·주소가 맞는지 확인하세요."],
+  ["예비소집 참석","통지서에 적힌 날짜에 아이와 함께 학교로 가요(서울 2026학년도는 1월 초 이틀, 오후~저녁이었어요). 불참하면 아이 소재 파악 절차가 진행되니, 못 가면 사전에 학교에 꼭 연락하세요. 일정에 따라 늘봄학교 수요조사도 함께 해요."],
+  ["방과 후 돌봄 계획 세우기","맞벌이라면 돌봄교실·늘봄학교·방과후학교·학원 중 어떻게 조합할지 정해요. 신청 시기는 학교 공지로 확인."],
+  ["입학 전 생활 리듬 맞추기","일찍 자고 일찍 일어나는 연습을 시작해요. 등교 시각 기준으로 아침 루틴을 연습해 보세요."]]},
+ {t:"2월",w:"본격 준비",items:[
+  ["신입생 안내문·오리엔테이션 확인","학교 홈페이지·알림 앱에 입학식 일정, 첫날 시간, 준비물이 올라와요."],
+  ["책가방·실내화·물병 준비","학용품은 학교에서 주는 경우가 많아요. 안내문을 확인한 뒤 필요한 것만 사세요. 이름표는 모든 물건에 붙여 주세요."],
+  ["급식 알레르기·건강 정보 학교에 알리기","알레르기, 지병, 복용 약이 있으면 서류로 꼭 전달해요."],
+  ["알림 앱 가입 / 비상 연락처 정리","학교에서 쓰는 알림 앱을 설치하고 긴급 연락처를 정리해요."],
+  ["화장실·식판·옷 입기 연습","‘준비도 점검’ 탭의 목록을 같이 해 보세요."]]},
+ {t:"3월 입학 첫 주",w:"입학식 이후",items:[
+  ["입학식 참석","아이 사진 한 장, 담임선생님·반 확인. 아이의 긴장을 풀어 주세요."],
+  ["입학 초기 적응 기간","학교마다 다르지만 입학 초기에 학교생활 적응 기간을 두고, 1학년 아이들이 학교에 적응하도록 함께 도와줘요. 하교 시간과 픽업·돌봄 동선은 안내문으로 확인해요."],
+  ["하교 후 대화 3가지","“오늘 뭐가 제일 재밌었어?” “점심 다 먹었어?” “힘든 건 없었어?” 정답을 캐묻지 말고 들어 주세요."],
+  ["알림장·가정통신문 매일 확인","준비물과 일정이 여기 있어요."]]},
+ {t:"3월~4월",w:"적응기",items:[
+  ["학부모 총회·상담 주간 참여","보통 3월에 있어요. 부담 갖지 말고, 궁금한 점은 메모해서 가세요."],
+  ["한 달 즈음 점검","피곤해하는 건 자연스러워요. 잠을 충분히, 주말엔 쉬게 해 주세요."],
+  ["친구 이름 들어 보기","누구랑 노는지, 어려운 친구는 없는지 자연스럽게 물어봐요."]]}
+];
+
+var WORRIES=[
+ ["입학하면 바로 진도를 나가나요?",
+  "보통 처음엔 ‘입학 초기 적응’ 기간이 있어요. 시간표는 그대로고, 기간과 방식은 시·도, 학교마다 달라요.",
+  ["입학 초기에 학교생활 적응 활동(교실·화장실·급식실 익히기, 규칙, 쉬는 시간 보내기)과 한글 해득 교육을 교과·창의적 체험활동 시간에 운영하는 학교가 많아요 (경기도 유아교육 지침 등)","서울시교육청도 ‘입학 초기 적응 활동 도움자료’를 만들어 학교에 보급하고 있어요","늘봄학교 1학년 맞춤형 프로그램은 입학 초기 3주 이내 기본 프로그램으로 놀이 중심 예체능·심리정서 활동을 하루 2시간 무상 제공한다고 알려져 있어요 (학교별 운영 방식·신청은 안내문 확인)","적응 기간이 끝나면 본격 수업이 시작되고 진도는 꽤 빨라요. 그래서 한글·수 감각은 ‘적응 기간 전에 기본을 해 두는’ 게 좋아요","다들 처음이라 선생님도 1학년 아이들이 적응하도록 도와주니, 너무 걱정하지 않으셔도 돼요","정확한 기간과 일정은 신입생 안내문이나 담임선생님께 확인하세요"]],
+ ["한글을 어디까지 해야 하나요?",
+  "완벽할 필요는 없지만, 어느 정도는 알고 가면 아이가 ‘나 잘하는 애야’ 하는 자신감을 갖고 시작해요.",
+  ["목표: 자기 이름과 쉬운 낱말은 읽고 쓰기, 받침 없는 글자는 읽기","더듬더듬이라도 읽을 수 있으면 첫 수업부터 손을 들 용기가 생겨요","학습지보다 그림책 읽기, 간판·과자 이름 읽기처럼 놀이로","받침, 긴 문장은 학교에서 배우니 완성까지 가지 않아도 돼요","힘들어하면 멈추고 읽어 주기로 돌아가요. 책이 싫어지면 손해예요"]],
+ ["수학은 어느 정도 해 두면 좋을까요?",
+  "선행까지는 아니어도, 진도가 빨라서 기본 수 감각은 어느 정도 있어야 자신감 있게 따라가요.",
+  ["목표: 50까지 세고 읽고 쓰기 (100까지 세어 보면 더 좋아요)","한 자리 수 덧셈·뺄셈은 손가락 없이도 척척 (10 이내 확실히, 20 이내까지 해 보면 여유 있어요)","10이 되는 짝(1+9, 2+8…) 알기","수의 크기 비교, 순서 말하기(첫째, 둘째), 기본 모양 구분","시계는 1학년 2학기에 배우니 미리 안 해도 되지만, 알아 두면 든든해요","문제집 한 장씩 매일 하는 습관, 장보기·계단 세기 같은 생활 속 연습 모두 좋아요"]],
+ ["혼자 화장실·급식을 잘 할지 걱정돼요",
+  "가장 현실적인 걱정이에요. 연습하면 금방 늘어요.",
+  ["화장실: 혼자 닦기, 물 내리기, 손 씻기까지 연습","급식: 식판 들고 앉아 먹기, 먹기 싫은 건 ‘조금만’ 달라고 말하기","밥 먹는 시간은 20~30분 안에 끝내는 연습","못 먹는 음식이 있으면 선생님께 미리 알리기"]],
+ ["친구를 못 사귈까 봐 걱정돼요",
+  "처음엔 다들 어색해요. 한두 주면 자연스럽게 친해져요.",
+  ["“같이 놀래?”를 말하는 연습","놀이터에서 처음 보는 친구에게 말 걸어 보기","친구와의 갈등은 ‘말로 해결’하는 방법 알려 주기","하교 후 이야기를 끝까지 들어 주기"]],
+ ["오래 앉아 있을 수 있을까요?",
+  "수업은 40분, 쉬는 시간은 10분이에요. 처음엔 짧게 느껴지게 구성돼 있어요.",
+  ["책상에 20~30분 앉아 그림 그리기·퍼즐 해 보기","쉬는 시간엔 화장실, 물 마시기, 다음 수업 준비","몸을 많이 쓰는 놀이로 에너지 풀어 주기"]],
+ ["맞벌이인데 방과 후는 어떻게 하죠?",
+  "학교 돌봄(늘봄)과 방과후학교, 학원을 조합하는 경우가 많아요.",
+  ["학교 공지에서 돌봄·늘봄 신청 일정을 확인(신청 기간이 짧을 수 있어요)","대기자 가능성도 있어 대안(조부모, 아이돌봄, 학원)을 같이 준비","첫 주는 하교가 불규칙할 수 있어 휴가 계획도 고려"]],
+ ["선생님과 어떻게 소통해야 하나요?",
+  "급한 일이 아니라면 알림 앱이나 연락 시간대를 지켜 주세요.",
+  ["상담 주간을 적극 활용하기","질문은 짧고 구체적으로","아이 건강·알레르기 정보는 먼저 알리기"]],
+ ["준비물 비용이 부담돼요",
+  "학용품은 학교에서 주는 곳이 많아 크게 들지 않아요.",
+  ["책가방은 가볍고 아이가 혼자 여닫기 쉬운 것으로","학교 안내문을 확인한 뒤 필요한 것만 구입","중고·물려받기도 좋아요"]]
+];
+
+var SKILLS=[
+ ["화장실을 혼자 다녀올 수 있다","용변, 닦기, 물 내리기, 손 씻기"],
+ ["신발을 혼자 신고 벗는다","벨크로 신발이 편해요"],
+ ["겉옷을 혼자 입고 벗는다","지퍼 올리기도 연습해 보세요"],
+ ["물병 뚜껑을 혼자 열고 닫는다",""],
+ ["식판으로 혼자 식사할 수 있다","20~30분 안에 끝내기"],
+ ["자기 이름을 읽고 쓸 수 있다",""],
+ ["연필을 잡고 그림이나 선을 그릴 수 있다","완벽한 모양이 아니어도 돼요"],
+ ["가방과 준비물을 스스로 챙겨 본 적 있다","알림장 확인까지는 부모와 함께"],
+ ["가위·풀을 안전하게 쓸 수 있다",""],
+ ["50까지 세고, 10 이내 덧셈·뺄셈을 할 수 있다","손가락 없이 하면 더 좋아요"],
+ ["쉬운 낱말을 더듬더듬이라도 읽을 수 있다","간판, 과자 이름, 짧은 그림책"],
+ ["20분 정도 앉아 활동할 수 있다","그림, 책, 퍼즐"],
+ ["모르는 것·불편한 것을 말로 표현한다","‘화장실 가고 싶어요’ ‘아파요’"],
+ ["부모와 헤어져도 크게 울지 않는다","기관 경험이 있으면 대체로 괜찮아요"],
+ ["집 주소/부모 전화번호를 말할 수 있다","최소한 부모 이름과 전화번호"],
+ ["길에서 신호등과 차를 조심할 수 있다","횡단보도 건너기 연습"],
+ ["또래와 놀이를 함께 할 수 있다","순서 지키기, 양보하기"]
+];
+
+var GEAR=[
+ ["학교에서 주는 경우가 많아요 (안내문 확인)",[
+  ["공책·학용품·색연필·크레파스 등","입학 때 일괄 지급하는 학교가 많아서, 미리 사지 않아도 돼요."],
+  ["교과서","학교에서 나눠 줘요."]]],
+ ["집에서 챙기면 좋은 최소한",[
+  ["책가방","가볍고 혼자 여닫기 쉬운 것. 비싼 건 필요 없어요."],
+  ["실내화 + 신발주머니","벨크로나 고무줄 신발이 편해요."],
+  ["물병","혼자 열 수 있는 것"],
+  ["이름표/이름 스티커","가방, 실내화, 물병, 옷 전부 이름"],
+  ["비상 연락처 카드","가방 안쪽에 부모 이름·번호"]]]
+];
+
+/* ---------- D-day ---------- */
+var by=$("#by"),now=new Date(),cy=now.getFullYear();
+for(var y=cy-8;y<=cy-4;y++){var o=document.createElement("option");o.value=y;o.textContent=y+"년생";by.appendChild(o)}
+var savedBy=store("ipak.by")||(now.getMonth()>=7?cy-6:cy-7);
+by.value=savedBy;
+function dday(){
+  var b=+by.value,entry=new Date(b+7,2,2); /* 3월 2일 가정 */
+  var d=Math.ceil((entry-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+  $("#dn").textContent=d>0?"D-"+d:d===0?"D-DAY":"D+"+(-d);
+  $("#dt").textContent=(b+7)+"학년도 입학 (3월 초 기준, 학교 일정은 다를 수 있어요)";
+}
+by.onchange=function(){store("ipak.by",+by.value);dday()};dday();
+
+/* ---------- 탭 ---------- */
+var tabs=document.querySelectorAll("nav.tabs button");
+tabs.forEach(function(b){b.onclick=function(){
+  tabs.forEach(function(x){x.setAttribute("aria-selected",x===b)});
+  document.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id===b.dataset.t)});
+  window.scrollTo({top:0});
+}});
+
+/* ---------- 할 일 ---------- */
+var done=store("ipak.done")||{};
+function el(h){var d=document.createElement("div");d.innerHTML=h;return d.firstChild}
+function renderPlan(){
+  var box=$("#stages");box.innerHTML="";var total=0,cnt=0;
+  STAGES.forEach(function(s,si){
+    var c=el('<div class="stage card"><span class="when"></span><h3></h3></div>');
+    c.querySelector(".when").textContent=s.w;c.querySelector("h3").textContent=s.t;
+    s.items.forEach(function(it,ii){
+      var id=si+"-"+ii;total++;if(done[id])cnt++;
+      var r=el('<label class="chk"><input type="checkbox"><span><b></b><small></small></span></label>');
+      r.querySelector("b").textContent=it[0];r.querySelector("small").textContent=it[1];
+      var cb=r.querySelector("input");cb.checked=!!done[id];
+      cb.onchange=function(){if(cb.checked)done[id]=1;else delete done[id];store("ipak.done",done);upd()};
+      c.appendChild(r);
+    });
+    box.appendChild(c);
+  });
+  function upd(){var n=Object.keys(done).length;$("#pt").textContent=n+" / "+total+" 완료";$("#pb").style.width=(n/total*100)+"%"}
+  upd();
+}
+renderPlan();
+
+/* ---------- 걱정 ---------- */
+(function(){
+  var box=$("#worries");
+  WORRIES.forEach(function(w){
+    var d=el('<details><summary></summary><div class="body"><div class="ans"></div><ul></ul></div></details>');
+    d.querySelector("summary").textContent=w[0];d.querySelector(".ans").textContent=w[1];
+    var ul=d.querySelector("ul");w[2].forEach(function(t){var li=document.createElement("li");li.textContent=t;ul.appendChild(li)});
+    box.appendChild(d);
+  });
+})();
+
+/* ---------- 준비도 ---------- */
+var sk=store("ipak.skill")||{};
+function renderSkill(){
+  var box=$("#skills");box.innerHTML="";
+  SKILLS.forEach(function(s,i){
+    var r=el('<label class="chk"><input type="checkbox"><span><b></b><small></small></span></label>');
+    r.querySelector("b").textContent=s[0];r.querySelector("small").textContent=s[1];
+    var cb=r.querySelector("input");cb.checked=!!sk[i];
+    cb.onchange=function(){if(cb.checked)sk[i]=1;else delete sk[i];store("ipak.skill",sk);res()};
+    box.appendChild(r);
+  });
+  res();
+}
+function res(){
+  var n=Object.keys(sk).length,t=SKILLS.length,r=$("#skres");
+  r.classList.add("on");
+  var todo=SKILLS.filter(function(_,i){return !sk[i]}).map(function(s){return s[0].replace(/(을|를) .*$/,"")});
+  var msg;
+  if(n===0){msg="아직 체크 전이에요. 해당하는 것을 눌러 보세요."}
+  else if(n>=t*.8){msg="아주 잘 준비되어 있어요! 남은 것은 가볍게 연습만 해 보세요."}
+  else if(n>=t*.5){msg="기본은 충분해요. 체크되지 않은 항목을 놀이처럼 연습하면 돼요."}
+  else{msg="괜찮아요. 입학까지 시간이 있고, 학교도 처음부터 알려 줘요. 한 번에 하나씩만 연습해 보세요."}
+  var h='<b class="big">'+n+' / '+t+'</b><p style="margin:6px 0 0">'+msg+'</p>';
+  if(n>0&&n<t){h+='<p style="margin:10px 0 0;font-size:13.5px;color:var(--muted)">같이 연습해 볼 것: '+SKILLS.filter(function(_,i){return !sk[i]}).slice(0,4).map(function(s){return s[0]}).join(" · ")+(t-n>4?" 외":"")+'</p>'}
+  r.innerHTML=h;
+}
+$("#skreset").onclick=function(){sk={};store("ipak.skill",sk);renderSkill()};
+renderSkill();
+
+/* ---------- 준비물 ---------- */
+var gs=store("ipak.gear")||{};
+(function(){
+  var box=$("#gears");
+  GEAR.forEach(function(g,gi){
+    var h=el('<div class="grp"></div>');h.textContent=g[0];box.appendChild(h);
+    g[1].forEach(function(it,ii){
+      var id=gi+"-"+ii;
+      var r=el('<label class="chk"><input type="checkbox"><span><b></b><small></small></span></label>');
+      r.querySelector("b").textContent=it[0];r.querySelector("small").textContent=it[1];
+      var cb=r.querySelector("input");cb.checked=!!gs[id];
+      cb.onchange=function(){if(cb.checked)gs[id]=1;else delete gs[id];store("ipak.gear",gs)};
+      box.appendChild(r);
+    });
+  });
+})();
+})();
+</script>
+</body>
+</html>
