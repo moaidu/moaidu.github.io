@@ -2,6 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7NZ1Z5MSPZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-7NZ1Z5MSPZ');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1B1A3A">
 <title>초등 첫걸음 · 입학 걱정 덜어드려요</title>
@@ -238,6 +246,7 @@ by.onchange=function(){store("ipak.by",+by.value);dday()};dday();
 /* ---------- 탭 ---------- */
 var tabs=document.querySelectorAll("nav.tabs button");
 tabs.forEach(function(b){b.onclick=function(){
+  try{gtag("event","ipak_tab",{tab:b.dataset.t})}catch(e){}
   tabs.forEach(function(x){x.setAttribute("aria-selected",x===b)});
   document.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id===b.dataset.t)});
   window.scrollTo({top:0});
