@@ -14,3 +14,4 @@ permalink: /about/
 ## 만들고 있는 것
 
 - [고등어디]({{ '/apps/#godeungeodi' | relative_url }}) — 나에게 맞는 고등학교를 고르는 앱
+- [초등 첫걸음]({{ '/apps/#ipak' | relative_url }}) — 초등학교 입학이 걱정되는 부모를 위한 안내
