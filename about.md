@@ -14,4 +14,3 @@ permalink: /about/
 ## 만들고 있는 것
 
 - [고등어디]({{ '/apps/#godeungeodi' | relative_url }}) — 나에게 맞는 고등학교를 고르는 앱
-- Telo — 학원용 서술형 수학 AI 채점 플랫폼
