@@ -1,0 +1,92 @@
+---
+layout: null
+title: 불멍
+permalink: /bulmeong/
+---
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>불멍 · 모닥불 멍때리기</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0705;overflow:hidden;font-family:system-ui,sans-serif}
+  canvas{display:block;width:100%;height:100%}
+  .ui{position:fixed;left:0;right:0;bottom:18px;text-align:center;color:#c9a27a;font-size:14px;opacity:.7;transition:opacity 1s}
+  .ui button{background:#2a1a10;color:#e9c39b;border:1px solid #5a3a22;border-radius:20px;padding:8px 16px;margin:0 4px;cursor:pointer;font-size:14px}
+  .ui.hide{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="ui" id="ui">
+  <button id="snd">🔊 타닥타닥 소리</button>
+  <button id="wood">🪵 장작 추가</button>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}rs();addEventListener('resize',rs);
+let P=[],S=[],fuel=1;
+const R=(a,b)=>a+Math.random()*(b-a);
+function spawn(){
+  const n=Math.floor(6*fuel);
+  for(let i=0;i<n;i++){
+    const w=Math.min(W,H)*0.14*fuel;
+    P.push({x:W/2+R(-w,w),y:H*0.78,vx:R(-.4,.4),vy:R(-2.6,-1.2)*(0.7+fuel*.4),life:1,d:R(.008,.016),r:R(14,34)*(0.6+fuel*.4)});
+  }
+  if(Math.random()<0.04*fuel)S.push({x:W/2+R(-30,30),y:H*0.76,vx:R(-1.5,1.5),vy:R(-4,-2),life:1});
+}
+function draw(){
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(11,7,5,.35)';ctx.fillRect(0,0,W,H);
+  // glow on ground
+  const g=ctx.createRadialGradient(W/2,H*.8,10,W/2,H*.8,Math.min(W,H)*.6);
+  g.addColorStop(0,'rgba(255,120,30,'+(.25*fuel)+')');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // logs
+  ctx.save();ctx.translate(W/2,H*.8);
+  ctx.fillStyle='#3a2415';
+  [[-1,.35],[1,-.35],[0,0]].forEach(([s,a])=>{ctx.save();ctx.rotate(a);ctx.fillRect(-70,-8+(s==0?6:0),140,18);ctx.restore()});
+  ctx.restore();
+  ctx.globalCompositeOperation='lighter';
+  spawn();
+  for(let i=P.length-1;i>=0;i--){
+    const p=P[i];p.x+=p.vx+Math.sin(p.y*.02+i)*.4;p.y+=p.vy;p.life-=p.d;p.r*=.985;
+    if(p.life<=0){P.splice(i,1);continue}
+    const l=p.life;
+    const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+    gr.addColorStop(0,`rgba(255,${180*l+40|0},${60*l|0},${.5*l})`);
+    gr.addColorStop(1,'rgba(255,60,0,0)');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
+  }
+  for(let i=S.length-1;i>=0;i--){
+    const s=S[i];s.x+=s.vx;s.y+=s.vy;s.vy+=.03;s.life-=.012;
+    if(s.life<=0){S.splice(i,1);continue}
+    ctx.fillStyle=`rgba(255,200,100,${s.life})`;ctx.fillRect(s.x,s.y,2,2);
+  }
+  fuel=Math.max(.45,fuel-.0003);
+  requestAnimationFrame(draw);
+}
+draw();
+// 타닥타닥 sound (noise crackle)
+let ac,on=false,timer;
+function crackle(){
+  const len=ac.sampleRate*R(.01,.05),b=ac.createBuffer(1,len,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=ac.createBufferSource(),gn=ac.createGain();gn.gain.value=R(.1,.5);
+  s.buffer=b;s.connect(gn).connect(ac.destination);s.start();
+  timer=setTimeout(crackle,R(30,400)/fuel);
+}
+document.getElementById('snd').onclick=e=>{
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  on=!on;clearTimeout(timer);if(on)crackle();
+  e.target.textContent=on?'🔇 소리 끄기':'🔊 타닥타닥 소리';
+};
+document.getElementById('wood').onclick=()=>{fuel=1.4};
+// hide UI when idle
+const ui=document.getElementById('ui');let t;
+function show(){ui.classList.remove('hide');clearTimeout(t);t=setTimeout(()=>ui.classList.add('hide'),4000)}
+['mousemove','touchstart','click'].forEach(e=>addEventListener(e,show));show();
+</script>
+</body>
+</html>
