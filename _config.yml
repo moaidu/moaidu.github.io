@@ -10,7 +10,6 @@ url: "https://moaidu.github.io"
 baseurl: ""
 
 # ── 연락/링크 (소개 페이지·푸터에서 사용) ───────────────
-email: yonjin0319@gmail.com
 github_username: moaidu
 
 markdown: kramdown
