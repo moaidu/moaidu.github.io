@@ -334,7 +334,7 @@ function evaluate(){updateEq();if(solved||!mission)return;var m=mission,ns=slime
   case 'multiply':if(ns.length===1&&ns[0]===m.a*m.k)win();return;
   case 'groupdiv':{var exp=[];for(var i=0;i<m.q;i++)exp.push(m.m);if(m.rem)exp.push(m.rem);exp.sort(function(a,b){return a-b});if(sameArr(ns,exp))win();return}
   case 'equal':{if(ns.length!==m.pieces)return;var ok=ns.every(function(n){return n===m.a});if(ok)win();else{mistakes++;sfx.bad();toast(S().eq.count(ns.join(' , ')))}return}
-  case 'split':{if(ns.length!==2)return;if(ns[0]===m.a&&ns[1]===m.b)win();else{mistakes++;sfx.bad();toast(S().eq.count(ns.join(' , ')))}return}}}
+  case 'split':{if(m.odd&&ns.length===3&&ns[0]===1&&ns[1]===m.a&&ns[2]===m.a){m.eq=m.N+' = '+m.a+' + '+m.a+' + 1';win();return}if(ns.length!==2)return;if(ns[0]===m.a&&ns[1]===m.b)win();else{mistakes++;sfx.bad();toast(S().eq.count(ns.join(' , ')))}return}}}
 function win(){solved=true;var st=mistakes===0?3:mistakes===1?2:1;setStars(st);sfx.win();
   for(var i=0;i<46;i++)parts.push({x:W*Math.random(),y:-10,vx:(Math.random()-.5)*60,vy:60+Math.random()*120,life:2,c:COLS[i%3][0],conf:1});
   $('weq').textContent=mission.eq;$('wst').textContent=['','★☆☆','★★☆','★★★'][st];$('win').hidden=false}
