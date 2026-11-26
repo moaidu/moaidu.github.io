@@ -160,7 +160,8 @@ function digs(n){return n>=100?2:n>=10?1:0}
 // ---------- 슬라임 ----------
 var capR=120;
 var radScale=1;
-function rad(n){return Math.min(20+13*Math.sqrt(n),capR)*radScale}
+function rad0(n){return n<=12?20+13*Math.sqrt(n):65+3.6*(Math.cbrt(n)-Math.cbrt(12))}
+function rad(n){var b=n<=12?20+13*Math.sqrt(n):65+3.6*(Math.cbrt(n)-Math.cbrt(12));return b*Math.min(1,capR/117)*radScale}
 function dotsFor(n,seed){var list=[],r=rad(n);
   if(n>=100){var h=Math.floor(n/100),t=Math.floor(n/10)%10,o=n%10;for(var i=0;i<h;i++)list.push(100);for(i=0;i<t;i++)list.push(10);for(i=0;i<o;i++)list.push(1)}
   else for(var j=0;j<n;j++)list.push(1);
@@ -203,7 +204,7 @@ function mText(m){var t=S().t;switch(m.type){
   case 'play':return S().playText;case 'pick':return m.want==='big'?t.pickBig:t.pickSmall;case 'multiply':return t.multiply(m.a,m.k);case 'groupdiv':return t.groupdiv(m.N,m.m)}return ''}
 function populate(){var m=mission,cx=W/2,cy=H*.5;slimes=[];radScale=1;
   var cnt=m.type==='multiply'?m.k:m.type==='equal'?m.pieces:m.type==='groupdiv'?m.q+(m.rem?1:0):0,psz=m.type==='multiply'?m.a:m.type==='equal'?m.a:m.m;
-  if(cnt>=3){var cols0=Math.min(cnt,Math.ceil(Math.sqrt(cnt*1.6))),rows0=Math.ceil(cnt/cols0),r0=Math.min(20+13*Math.sqrt(psz),capR);radScale=Math.min(1,.78*Math.min(W/(cols0*2*r0),H*.72/(rows0*2*r0)))}
+  if(cnt>=3){var cols0=Math.min(cnt,Math.ceil(Math.sqrt(cnt*1.6))),rows0=Math.ceil(cnt/cols0),r0=rad0(psz);radScale=Math.min(1,.78*Math.min(W/(cols0*2*r0),H*.72/(rows0*2*r0)))}
   if(m.type==='make'){var xs=m.list.length===2?[W*.3,W*.7]:[W*.24,W*.5,W*.76];m.list.forEach(function(n,i){slimes.push(mk(n,xs[i],cy+(m.list.length===3?(i===1?-H*.12:H*.1):0)))})}
   else if(m.type==='regroup'){var A2=mk(m.a,W*.3,cy),B2=mk(m.b,W*.7,cy);m.idA=A2.id;m.idB=B2.id;slimes.push(A2,B2)}
   else if(m.type==='addto'){var S1=mk(m.a,cx,cy*.85);m.idA=S1.id;slimes.push(S1)}

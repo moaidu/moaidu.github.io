@@ -57,7 +57,7 @@ function pcol(s){return col(s.hue,1)}
 // ---------- 슬라임 ----------
 var capR=120,topEdge=56,botEdge=400;
 function layoutEdges(){topEdge=(eqOn?60+($('eq').offsetHeight||46)+6:56)+(numsOn?32:0);botEdge=H-100;capR=Math.max(36,Math.min(120,Math.min(W,H)*.3,(botEdge-topEdge)/2))}
-function rad(n){return Math.min(20+13*Math.sqrt(n),capR)}
+function rad(n){var b=n<=12?20+13*Math.sqrt(n):65+3.6*(Math.cbrt(n)-Math.cbrt(12));return b*Math.min(1,capR/117)}
 function dotsFor(n,seed){var r=rad(n),out=[];for(var i=0;i<n;i++){var rr=Math.sqrt((i+.5)/n)*r*.66,a=i*2.39996+seed;out.push({x:Math.cos(a)*rr,y:Math.sin(a)*rr})}return out}
 function mk(n,x,y,gen){var s={id:uid++,n:n,x:x,y:y,vx:0,vy:0,gen:gen,hue:hueOf(gen),amp:.3,ph:Math.random()*6.28,seed:Math.random()*6.28,dots:[]};s.dots=dotsFor(n,s.seed);return s}
 function start(){slimes=[];parts=[];cuts=0;slimes.push(mk(12,W/2,H*.42,0))}
