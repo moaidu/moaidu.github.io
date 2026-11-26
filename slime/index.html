@@ -182,17 +182,22 @@ function mk(n,x,y){var s={id:uid++,n:n,x:x,y:y,vx:0,vy:0,mix:digs(n),amp:.3,ph:M
 function R(a,b){return a+Math.floor(Math.random()*(b-a+1))}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=R(0,i),t=a[i];a[i]=a[j];a[j]=t}return a}
 function pickOf(arr,r){return arr[(r-1)%arr.length]}
-var ORD={1:['fill','pickBig','make','fill','pickSmall','half','make','pickBig'],
+var ORD={1:['fill','pickBig','make','match','fill','pickSmall','half','addone','make','match','half','addone'],
  2:['split','split','make','addto','takeaway','regroup','half','addto','equal','takeaway','make','regroup'],
  3:['make','addto','takeaway','multiply','addto','half','regroup','multiply','equal','groupdiv'],
  4:['make','addto','takeaway','multiply','equal','groupdiv','takeaway','make']};
+var lastL1='',lastFillT=0;
 function genMission(lv,r){
   if(lv===0)return{type:'play',jar:true,eq:''};
   var type=pickOf(ORD[lv],r),m,tier=lv===1?0:lv===2?(r<=3?0:r<=6?1:2):lv===3?(r<=5?2:3):3;
   var rng=[[4,8],[8,14],[12,24],[20,50]][tier];
   function mkMake(T,unit){var a=unit*R(1,T/unit-1),b=T-a,c=unit*R(1,Math.max(1,Math.floor(T/unit/2)));return{type:'make',T:T,list:shuffle([a,b,c]),eq:a+' + '+b+' = '+T}}
   if(lv===1){
-    if(type==='fill'){var T0=R(1,r<5?5:8);m={type:'fill',T:T0,jar:true,eq:'1 + ... = '+T0}}
+    if(r>12){var pool=['fill','pickBig','pickSmall','make','half','match','addone'],t0;do{t0=pool[R(0,pool.length-1)]}while(t0===lastL1);type=t0}
+    lastL1=type;
+    if(type==='fill'){var T0;do{T0=R(1,r<5?5:8)}while(T0===lastFillT);lastFillT=T0;m={type:'fill',T:T0,jar:true,eq:'1 + ... = '+T0}}
+    else if(type==='match'){var mx=r<5?5:10,Tm2=R(1,mx),o1,o2;do{o1=R(1,mx)}while(o1===Tm2);do{o2=R(1,mx)}while(o2===Tm2||o2===o1);m={type:'match',T:Tm2,list:shuffle([Tm2,o1,o2]),eq:''+Tm2}}
+    else if(type==='addone'){var a2=R(1,r<5?4:8),ad=r<9?1:R(1,2);m={type:'addto',a:a2,T:a2+ad,jar:true,jarUnit:1,l1add:ad,eq:a2+' + '+ad+' = '+(a2+ad)}}
     else if(type==='pickBig'||type==='pickSmall'){var hi=r<5?6:10,a1=R(1,hi),b1=R(1,hi);while(b1===a1)b1=R(1,hi);m={type:'pick',want:type==='pickBig'?'big':'small',a:a1,b:b1,eq:a1+' , '+b1}}
     else if(type==='make'){var Tm=R(3,6),am=R(1,Tm-1);m={type:'make',T:Tm,list:shuffle([am,Tm-am]),eq:am+' + '+(Tm-am)+' = '+Tm}}
     else {var Nh=2*R(1,4);m={type:'split',N:Nh,a:Nh/2,b:Nh/2,pieces:2,half:true,eq:Nh+' = '+Nh/2+' + '+Nh/2}}
@@ -215,7 +220,7 @@ function mText(m){var t=S().t;switch(m.type){
 function populate(){var m=mission,cx=W/2,cy=H*.5;slimes=[];radScale=1;
   var cnt=m.type==='multiply'?m.k:m.type==='equal'?m.pieces:m.type==='groupdiv'?m.q+(m.rem?1:0):0,psz=m.type==='multiply'?m.a:m.type==='equal'?m.a:m.m;
   if(cnt>=3){var cols0=Math.min(cnt,Math.ceil(Math.sqrt(cnt*1.6))),rows0=Math.ceil(cnt/cols0),r0=rad0(psz);radScale=Math.min(1,.78*Math.min(W/(cols0*2*r0),H*.72/(rows0*2*r0)))}
-  if(m.type==='make'){var xs=m.list.length===2?[W*.3,W*.7]:[W*.24,W*.5,W*.76];m.list.forEach(function(n,i){slimes.push(mk(n,xs[i],cy+(m.list.length===3?(i===1?-H*.12:H*.1):0)))})}
+  if(m.type==='make'||m.type==='match'){var xs=m.list.length===2?[W*.3,W*.7]:[W*.24,W*.5,W*.76];m.list.forEach(function(n,i){slimes.push(mk(n,xs[i],cy+(m.list.length===3?(i===1?-H*.12:H*.1):0)))})}
   else if(m.type==='regroup'){var A2=mk(m.a,W*.3,cy),B2=mk(m.b,W*.7,cy);m.idA=A2.id;m.idB=B2.id;slimes.push(A2,B2)}
   else if(m.type==='addto'){var S1=mk(m.a,cx,cy*.85);m.idA=S1.id;slimes.push(S1)}
   else if(m.type==='takeaway'){var S2=mk(m.N,cx,cy*.85);m.idA=S2.id;slimes.push(S2)}
@@ -256,6 +261,8 @@ function numTag(n){return showNum()?'<b class="nm">'+n+'</b>':''}
 function pictoHtml(m){
   if(m.type==='fill'){var arr='';for(var q=0;q<m.T;q++)arr+=blob(0,m.T>5?34:42,true);return '<div class="picto">'+JARIC+ARW+'<div class="many">'+arr+'</div>'+(showNum()?'<span class="nm big">'+m.T+'</span>':'')+'</div>'}
   if(m.type==='make'){var l=m.list.slice().sort(function(a,b){return a-b}),pa=m.T-m.list.filter(function(v){return v===m.T}).length*0,a1=l[0],b1=m.T-a1;for(var z=0;z<l.length;z++){if(l.indexOf(m.T-l[z])>=0&&l[z]!==m.T){a1=l[z];b1=m.T-l[z];break}}return '<div class="picto"><span class="pk">'+blob(a1,56)+numTag(a1)+'</span><span class="sep">+</span><span class="pk">'+blob(b1,56)+numTag(b1)+'</span>'+ARW+'<span class="pk">'+blob(m.T,70)+numTag(m.T)+'</span></div>'}
+  if(m.type==='match')return '<div class="picto"><span class="pk">'+blob(m.T,76)+numTag(m.T)+'</span><span class="sep">=</span><b class="hand" style="font-size:40px">\u{1F446}</b></div>';
+  if(m.type==='addto'){var sb='';for(var q2=0;q2<(m.l1add||1);q2++)sb+=blob(0,30,true);return '<div class="picto"><span class="pk">'+blob(m.a,54)+numTag(m.a)+'</span><span class="sep">+</span>'+JARIC.replace('width="64" height="64"','width="46" height="46"')+'<div class="many" style="max-width:70px">'+sb+'</div>'+ARW+'<span class="pk">'+blob(m.T,66)+numTag(m.T)+'</span></div>'}
   if(m.type==='pick'){var bigOk=m.want==='big';return '<div class="picto"><span class="pk">'+blob(0,76,true)+'<b class="hand">'+(bigOk?'\u{1F446}':'&nbsp;')+'</b></span><span class="pk">'+blob(0,40,true)+'<b class="hand">'+(bigOk?'&nbsp;':'\u{1F446}')+'</b></span></div>'}
   if(m.type==='split'&&m.half){var h=m.N/2;return '<div class="picto"><span class="pk cutw">'+blob(m.N,70)+numTag(m.N)+'<i class="cutl"></i><b class="scis">✂️</b></span>'+ARW+'<span class="pk">'+blob(h,56)+numTag(h)+'</span><span class="pk">'+blob(h,56)+numTag(h)+'</span></div>'}
   return '<span>'+mText(m)+'</span>'}
@@ -281,6 +288,8 @@ function speak(text){try{if(!window.speechSynthesis)return;var u=new SpeechSynth
 function setDemo(){demo=null;if(level!==1||!mission)return;var m=mission;
   if(m.type==='fill')demo={kind:'path',from:function(){return{x:W/2,y:H-60}},to:function(){return{x:W/2,y:H*.45}}};
   else if(m.type==='make'&&slimes.length>=2)demo={kind:'path',from:function(){return{x:slimes[0].x,y:slimes[0].y}},to:function(){return{x:slimes[1].x,y:slimes[1].y}}};
+  else if(m.type==='addto'&&slimes.length)demo={kind:'path',from:function(){return{x:W/2,y:H-60}},to:function(){return{x:slimes[0].x,y:slimes[0].y}}};
+  else if(m.type==='match'){var tg4=null;slimes.forEach(function(q){if(q.n===m.T)tg4=q});if(tg4)demo={kind:'tap',at:function(){return{x:tg4.x,y:tg4.y}}}}
   else if(m.type==='pick'){var tgt=m.want==='big'?(slimes[0].n>slimes[1].n?slimes[0]:slimes[1]):(slimes[0].n<slimes[1].n?slimes[0]:slimes[1]);demo={kind:'tap',at:function(){return{x:tgt.x,y:tgt.y}}}}
   else if(m.type==='split'&&slimes.length===1)demo={kind:'path',trail:true,from:function(){var q=slimes[0];return{x:q.x,y:q.y-rad(q.n)*1.4}},to:function(){var q=slimes[0];return{x:q.x,y:q.y+rad(q.n)*1.4}}}}
 var lastAct=0;
@@ -308,7 +317,7 @@ function pullInfo(pl,p){var s=pl.s,r=rad(s.n),u=unit(s.n),d=Math.hypot(p.x-s.x,p
 function jarUnit(){return(mission&&mission.jarUnit)||1}
 cv.addEventListener('pointerdown',function(e){lastAct=performance.now()/1000;if(solved||!started)return;ac();clearTimeout(toastT);$('toast').style.opacity=0;cv.setPointerCapture(e.pointerId);var p=pos(e);lastP=p;touched=true;
   var s=hit(p);
-  if(mission.type==='pick'){if(s)choose(s);return}
+  if(mission.type==='pick'||mission.type==='match'){if(s)choose(s);return}
   if(jarOn()&&inJar(p.x,p.y)&&!s){var ns=mk(twoJars()&&p.x>W/2?10:jarUnit(),p.x,p.y-30);ns.fromJar=true;slimes.push(ns);drag={s:ns,dx:0,dy:-30};sfx.squish();return}
   if(!s){knife={a:p,b:p};return}
   var rd=Math.hypot(p.x-s.x,p.y-s.y);slimes.splice(slimes.indexOf(s),1);slimes.push(s);
@@ -321,7 +330,7 @@ function endPtr(e){if(knife){var k=knife;knife=null;if(Math.hypot(k.b.x-k.a.x,k.
   if(drag){var s=drag.s;drag=null;jig(s,-7);if(!(typeof jarOn==='function'&&jarOn()&&inJar(s.x,s.y))){sfx.sticky();sfx.boing()}drop(s,null,lastP)}
   if(pull){var pl=pull;pull=null;if(pl.k>=1)tear(pl)}}
 cv.addEventListener('pointerup',function(e){lastAct=performance.now()/1000;endPtr(e)});cv.addEventListener('pointercancel',function(){knife=null;drag=null;pull=null});
-function choose(s){var m=mission,other=slimes[0]===s?slimes[1]:slimes[0],ok=m.want==='big'?s.n>other.n:s.n<other.n;
+function choose(s){var m=mission;if(m.type==='match'){if(s.n===m.T){win()}else{mistakes++;sfx.bad();s.amp=.5}return}var other=slimes[0]===s?slimes[1]:slimes[0],ok=m.want==='big'?s.n>other.n:s.n<other.n;
   if(ok){m.eq=m.a+' , '+m.b;win()}else{mistakes++;sfx.bad();s.amp=.5}}
 function protectedSlime(s){return mission&&(s.id===mission.idA||s.id===mission.idB)}
 function drop(s,ex,pt){if(jarOn()&&inJar(s.x,s.y)&&!protectedSlime(s)){slimes=slimes.filter(function(q){return q!==s});sfx.jar();for(var q=0;q<6;q++)parts.push({x:s.x,y:s.y,vx:(Math.random()-.5)*100,vy:-40-Math.random()*60,life:.8,c:pc(s)});evaluate();return}
