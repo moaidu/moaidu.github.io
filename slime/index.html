@@ -241,7 +241,7 @@ function pictoHtml(m){
 function hintFor(m){var H=S().hint;return m.type==='pick'?H.pick:m.jar?H.jar:m.type==='make'||m.type==='multiply'?H.join:m.type==='regroup'?H.regroup:H.cut}
 function startMission(){
   mission=genMission(level,round);mistakes=0;solved=false;parts=[];diffWarned=false;populate();numsOn=level>=2||level===0;if(level<=1&&numsOnL[level]!==undefined)numsOn=numsOnL[level];
-  $('win').hidden=true;setStars(0);setDemo();render();if(level!==1)toast(hintFor(mission));else{clearTimeout(toastT);$('toast').style.opacity=0}if(level===1&&touched)speak(mText(mission));
+  $('win').hidden=true;setStars(0);setDemo();render();if(level!==1&&round<=2)toast(hintFor(mission));else{clearTimeout(toastT);$('toast').style.opacity=0}if(level===1&&touched)speak(mText(mission));
 }
 function render(){var s=S();$('credit').textContent=s.cr;$('credit2').textContent=s.cr;$('ttl').textContent=s.title;var pic=level===1&&mission&&mission.type!=='play';$('mission').innerHTML=(pic?pictoHtml(mission):'<span>'+(mission?mText(mission):'')+'</span>')+'<button class="spk" id="spk" type="button" aria-label="'+s.speak+'"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.500 9a4 4 0 0 1 0 6M19 6.500a8 8 0 0 1 0 11"/></svg></button>';$('spk').onclick=function(){touched=true;speak(mission?mText(mission):'')};
   $('mission').setAttribute('aria-label',mission?mText(mission).replace(/<[^>]+>/g,''):'');$('roundTag').textContent=s.round(round);$('rsTxt').textContent=s.reset;$('next').textContent=s.next;$('wbig').textContent=s.great;$('lvBtn').textContent=s.lv[level-1]+' ▾';$('lgBtn').textContent=s.lg;
@@ -278,7 +278,7 @@ function unit(n){return n>=100?10:1}
 function stepPx(n){return n>=100?7:14}
 function pullInfo(pl,p){var s=pl.s,r=rad(s.n),u=unit(s.n),d=Math.hypot(p.x-s.x,p.y-s.y)-r*.55,steps=d<14?0:1+Math.floor((d-14)/stepPx(s.n)),max=Math.floor((s.n-1)/u),k=steps===0?0:Math.max(1,Math.min(max,steps))*u;return{d:d,k:k}}
 function jarUnit(){return(mission&&mission.jarUnit)||1}
-cv.addEventListener('pointerdown',function(e){if(solved||!started)return;ac();cv.setPointerCapture(e.pointerId);var p=pos(e);lastP=p;touched=true;
+cv.addEventListener('pointerdown',function(e){if(solved||!started)return;ac();clearTimeout(toastT);$('toast').style.opacity=0;cv.setPointerCapture(e.pointerId);var p=pos(e);lastP=p;touched=true;
   var s=hit(p);
   if(mission.type==='pick'){if(s)choose(s);return}
   if(jarOn()&&inJar(p.x,p.y)&&!s){var ns=mk(twoJars()&&p.x>W/2?10:jarUnit(),p.x,p.y-30);ns.fromJar=true;slimes.push(ns);drag={s:ns,dx:0,dy:-30};sfx.squish();return}
