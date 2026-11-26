@@ -36,7 +36,7 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 #next{margin-top:4px;background:#3fd28c;color:#06361f;font-size:20px;padding:10px 28px;border-radius:14px;box-shadow:0 4px 0 #1f8a5a}
 #next:active{transform:translateY(3px);box-shadow:0 1px 0 #1f8a5a}
 #eq{background:#00000033;border-radius:16px;padding:8px 14px;text-align:center;font-size:30px;letter-spacing:1px;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;box-shadow:inset 0 0 0 2px #ffffff22}
-#eq .num{display:inline-block;min-width:1ch;transition:color .2s,transform .2s}#eq .chg{color:#ffe14d;transform:scale(1.12)}#eq .op{opacity:.8}#eq .res{color:#8cffc0}#eq .bad{color:#ffb070}#eq small{display:block;width:100%;font-size:15px;opacity:.85;letter-spacing:0}
+#eq .num{display:inline-block;min-width:1ch;transition:color .2s,transform .2s}#eq .chg{color:#ffe14d;transform:scale(1.12)}#eq .op{opacity:.8}#eq .res{color:#8cffc0}#eq .bad{color:#ffb070}#eq .xl{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;font-size:.74em;opacity:.95}#eq .xl .sp{width:10px}#eq small{display:block;width:100%;font-size:15px;opacity:.85;letter-spacing:0}
 nav{display:flex;gap:10px;padding-bottom:2px}
 .tool{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--tool);border-radius:16px;padding:12px 8px;font-size:18px;box-shadow:0 4px 0 #00000040}
 .tool svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -216,16 +216,17 @@ function populate(){var m=mission,cx=W/2,cy=H*.5;slimes=[];radScale=1;
 function byId(id){for(var i=0;i<slimes.length;i++)if(slimes[i].id===id)return slimes[i];return null}
 function num(v,orig){return '<span class="num'+(orig!==undefined&&v!==orig?' chg':'')+'">'+v+'</span>'}
 var OP=function(o){return ' <span class="op">'+o+'</span> '};
+function xlines(arr,tot){if(!(level===0||level>=3)||arr.length<2)return '';var n=arr[0].n,i;if(n<2)return '';for(i=1;i<arr.length;i++)if(arr[i].n!==n)return '';var k=arr.length,h='<div class="xl">'+num(n)+OP('×')+num(k)+OP('=')+'<span class="num res">'+tot+'</span></div>';if(level===0||level>=4)h+='<div class="xl">'+num(tot)+OP('÷')+num(k)+OP('=')+num(n)+'</div><div class="xl">'+num(tot)+OP('÷')+num(n)+OP('=')+num(k)+'</div>';return h}
 function updateEq(){var e=$('eq'),m=mission,E=S().eq;if(!m||!e)return;var h='';
-  if(m.type==='play'){var arr0=slimes.slice().sort(function(a,b){return a.x-b.x}),t0=0;arr0.forEach(function(q){t0+=q.n});e.innerHTML=arr0.length>1?arr0.map(function(q){return num(q.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+t0+'</span>':'<span class="num">'+t0+'</span>';return}
+  if(m.type==='play'){var arr0=slimes.slice().sort(function(a,b){return a.x-b.x}),t0=0;arr0.forEach(function(q){t0+=q.n});e.innerHTML=(arr0.length>1?arr0.map(function(q){return num(q.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+t0+'</span>':'<span class="num">'+t0+'</span>')+xlines(arr0,t0);return}
   if(false){}
   else if(m.type==='addto'){var Q=byId(m.idA);if(Q){var d1=Q.n-m.a;h=num(m.a)+OP(d1>=0?'+':'−')+num(Math.abs(d1),0)+OP('=')+'<span class="num res">'+Q.n+'</span><small>'+E.addN(m.T-m.a)+'</small>'}}
   else if(m.type==='takeaway'){var Q2=byId(m.idA);if(Q2){var d2=m.N-Q2.n;h=num(m.N)+OP(d2>=0?'−':'+')+num(Math.abs(d2),0)+OP('=')+'<span class="num res">'+Q2.n+'</span><small>'+E.takeN(m.N-m.T)+'</small>'}}
   else if(m.type==='pick'){h=num(m.a)+OP(m.want==='big'?'&gt;':'&lt;')+num(m.b)}
   else{var arr=slimes.slice().sort(function(a,b){return a.x-b.x}),tot=0;arr.forEach(function(s){tot+=s.n});
-    if(m.type==='split'||m.type==='equal'){h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))}
-    else if(m.type==='groupdiv'){var c=0;arr.forEach(function(s){if(s.n===m.m)c++});h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+'<small>'+E.groups(c,m.m)+'</small>'}
-    else if(m.type==='multiply'){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span><small>'+E.times(m.a,m.k)+'</small>'}
+    if(m.type==='split'||m.type==='equal'){h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+xlines(arr,tot)}
+    else if(m.type==='groupdiv'){var c=0;arr.forEach(function(s){if(s.n===m.m)c++});h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+'<small>'+E.groups(c,m.m)+'</small>'+xlines(arr,tot)}
+    else if(m.type==='multiply'){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span><small>'+E.times(m.a,m.k)+'</small>'+xlines(arr,tot)}
     else if(arr.length){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span>'}
     else if(m.type==='fill'){h='<span class="num">0</span><small>'+E.target(m.T)+'</small>'}}
   if(m.jar&&h){var loose=0;slimes.forEach(function(q){if(q.id!==m.idA&&q.id!==m.idB)loose+=q.n});if(loose>0&&m.type!=='fill')h+='<small>'+E.loose(loose)+'</small>'}
@@ -238,7 +239,7 @@ function pictoHtml(m){
   return '<span>'+mText(m)+'</span>'}
 function hintFor(m){var H=S().hint;return m.type==='pick'?H.pick:m.jar?H.jar:m.type==='make'||m.type==='multiply'?H.join:m.type==='regroup'?H.regroup:H.cut}
 function startMission(){
-  mission=genMission(level,round);mistakes=0;solved=false;parts=[];diffWarned=false;populate();numsOn=level>=2;if(level<=1&&numsOn0!==null)numsOn=numsOn0;
+  mission=genMission(level,round);mistakes=0;solved=false;parts=[];diffWarned=false;populate();numsOn=level>=2||level===0;if(level<=1&&numsOnL[level]!==undefined)numsOn=numsOnL[level];
   $('win').hidden=true;setStars(0);setDemo();render();if(level!==1)toast(hintFor(mission));else{clearTimeout(toastT);$('toast').style.opacity=0}if(level===1&&touched)speak(mText(mission));
 }
 function render(){var s=S();$('credit').textContent=s.cr;$('credit2').textContent=s.cr;$('ttl').textContent=s.title;var pic=level===1&&mission&&mission.type!=='play';$('mission').innerHTML=(pic?pictoHtml(mission):'<span>'+(mission?mText(mission):'')+'</span>')+'<button class="spk" id="spk" type="button" aria-label="'+s.speak+'"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.500 9a4 4 0 0 1 0 6M19 6.500a8 8 0 0 1 0 11"/></svg></button>';$('spk').onclick=function(){touched=true;speak(mission?mText(mission):'')};
@@ -247,7 +248,7 @@ function render(){var s=S();$('credit').textContent=s.cr;$('credit2').textConten
   document.documentElement.lang=lang==='ko'?'ko':'en';document.title=s.title;
   $('numBtn').hidden=!(level<=1);$('numBtn').setAttribute('aria-pressed',numsOn);$('eq').hidden=!numsOn;$('legend').hidden=!numsOn;$('hud').style.display=level===0?'none':'';$('lvBtn').textContent=(level===0?s.playName:s.lv[level-1])+' ▾';updateEq()}
 function setStars(n){var s='';for(var i=0;i<3;i++)s+=i<n?'★':'☆';$('stars').textContent=s}
-var numsOn0=null;
+var numsOnL={};
 var toastT=0;function toast(m){var e=$('toast');e.textContent=m;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(function(){e.style.opacity=0},3400)}
 // ---------- 읽어 주기 ----------
 function speak(text){try{if(!window.speechSynthesis)return;var u=new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g,'').replace(/−/g,lang==='ko'?'빼기':'minus')),vs=speechSynthesis.getVoices();u.lang=lang==='ko'?'ko-KR':'en-US';u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
@@ -266,7 +267,7 @@ function buildLevels(){var s=S();$('lvTitle').textContent=s.pick;$('lvLang').tex
   var h='<button class="lv play" type="button" data-l="0"'+(level===0?' aria-current="true"':'')+'><div class="dot" style="background:linear-gradient(135deg,'+COLS[0][0]+','+COLS[1][0]+','+COLS[2][0]+')"></div><b>'+s.playName+'</b><span>'+s.playSub+'</span></button>';
   h+=s.lv.map(function(n,i){return '<button class="lv" type="button" data-l="'+(i+1)+'"'+(i+1===level?' aria-current="true"':'')+'><div class="dot" style="background:'+dots[i]+'"></div><b>'+n+'</b><span>'+s.lvSub[i]+'</span></button>'}).join('');
   $('lvGrid').innerHTML=h;
-  Array.prototype.forEach.call($('lvGrid').children,function(b){b.onclick=function(){level=+b.getAttribute('data-l');try{localStorage.setItem('numslime_level',String(level))}catch(e){}round=1;numsOn0=null;touched=true;$('lvl').hidden=true;started=true;startMission()}})}
+  Array.prototype.forEach.call($('lvGrid').children,function(b){b.onclick=function(){level=+b.getAttribute('data-l');try{localStorage.setItem('numslime_level',String(level))}catch(e){}round=1;numsOnL={};touched=true;$('lvl').hidden=true;started=true;startMission()}})}
 function openLevels(){buildLevels();$('lvl').hidden=false}
 // ---------- 입력 ----------
 // 가운데를 잡으면 옮기고, 가장자리를 잡아당기면 똑 떼어지고, 빈 곳에서 그으면 칼처럼 잘린다.
@@ -382,7 +383,7 @@ function frame(ts){var t=ts/1000,dt=Math.min(.05,t-last||.016);last=t;
 $('tReset').onclick=function(){if(solved||!mission)return;parts=[];populate();sfx.bloop();diffWarned=false;updateEq()};
 $('next').onclick=function(){round++;startMission()};
 $('lvBtn').onclick=openLevels;
-$('numBtn').onclick=function(){numsOn0=!numsOn;numsOn=numsOn0;render()};
+$('numBtn').onclick=function(){numsOn=!numsOn;numsOnL[level]=numsOn;render()};
 function setLang(l){lang=l;try{localStorage.setItem('numslime_lang',l)}catch(e){}render();if(!$('lvl').hidden)buildLevels()}
 $('lgBtn').onclick=function(){setLang(lang==='ko'?'en':'ko')};
 $('lvLang').onclick=function(){setLang(lang==='ko'?'en':'ko')};

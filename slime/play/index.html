@@ -17,18 +17,18 @@ h1{margin:0;font-size:22px;font-weight:400;color:#d9ffe9;text-shadow:0 2px 0 #00
 .pill[aria-pressed="true"]{background:#ffe14d;color:#3a2a00}
 .pill svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 #eq{position:absolute;left:50%;transform:translateX(-50%);width:max-content;top:calc(60px + env(safe-area-inset-top,0px));max-width:calc(100% - 24px);background:#00000040;border-radius:18px;padding:8px 16px;font-size:28px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;box-shadow:inset 0 0 0 2px #ffffff22;pointer-events:none}
-#eq[hidden]{display:none}#eq .op{opacity:.85;padding:0 2px}#eq .chip{min-width:34px;padding:2px 10px;border-radius:999px;text-align:center;color:#1f1a3d;box-shadow:inset 0 -3px 0 #00000026}
+#eq[hidden]{display:none}#eq{flex-direction:column;gap:4px}#eq .ln{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}#eq .ln.sm{font-size:20px}#eq{gap:2px}#eq .ln.sm .chip{min-width:26px;padding:0 9px}#eq .ln.sm .sp{width:12px}#eq .op{opacity:.85;padding:0 2px}#eq .chip{min-width:34px;padding:2px 10px;border-radius:999px;text-align:center;color:#1f1a3d;box-shadow:inset 0 -3px 0 #00000026}
 #credit{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:calc(50% - 70px);font-size:11px;line-height:1.35;opacity:.55;pointer-events:none;letter-spacing:.2px;text-shadow:0 1px 0 #0006}
 :focus-visible{outline:3px solid #fff;outline-offset:2px}
 </style>
 <div id="stage"><canvas id="cv"></canvas></div>
-<div id="eq" aria-live="polite" hidden></div>
+<div id="eq" aria-live="polite"></div>
 <div id="credit"></div>
 <header>
   <h1 id="ttl">넘버 슬라임</h1>
   <div class="btns">
     <button class="pill" id="numBtn" type="button" aria-pressed="true">123</button>
-    <button class="pill" id="eqBtn" type="button" aria-pressed="false">1+2</button>
+    <button class="pill" id="eqBtn" type="button" aria-pressed="true">1+2</button>
     <button class="pill" id="rsBtn" type="button"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.600-5.900M4 4v4.500h4.500"/></svg></button>
   </div>
 </header>
@@ -39,7 +39,7 @@ var $=function(id){return document.getElementById(id)};
 var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,DPR=1;
 var ko=((navigator.language||'en').toLowerCase().indexOf('ko')===0);
 $('ttl').textContent=ko?'넘버 슬라임':'Number Slime';$('credit').textContent=ko?'© 2026 @cool.coolbro · 무단 복제·배포 금지':'© 2026 @cool.coolbro. All rights reserved.';$('numBtn').setAttribute('aria-label',ko?'숫자 보기':'Show numbers');$('eqBtn').setAttribute('aria-label',ko?'식으로 나타내기':'Show as an equation');$('rsBtn').setAttribute('aria-label',ko?'다시 시작':'Start over');document.documentElement.lang=ko?'ko':'en';document.title=ko?'넘버 슬라임 놀이터':'Number Slime Playground';
-var slimes=[],parts=[],uid=1,drag=null,pull=null,knife=null,numsOn=true,eqOn=false,eqMode='split',subBase=0,subRem=0,subHue=150,eqSig='',touched=false,lastP={x:0,y:0},cuts=0;
+var slimes=[],parts=[],uid=1,drag=null,pull=null,knife=null,numsOn=true,eqOn=true,eqMode='split',subBase=0,subRem=0,subHue=150,eqSig='',touched=false,lastP={x:0,y:0},cuts=0;
 function resize(){var r=cv.getBoundingClientRect(),oW=W,oH=H;DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;if(oW>0&&oH>0&&W>0&&H>0){var kx=W/oW,ky=H/oH;slimes.forEach(function(s){s.x*=kx;s.y*=ky})}cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
 // ---------- 소리 ----------
 var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
@@ -56,7 +56,7 @@ function col(h,l){return 'hsl('+Math.round(h)+','+(l?80:62)+'%,'+(l?68:42)+'%)'}
 function pcol(s){return col(s.hue,1)}
 // ---------- 슬라임 ----------
 var capR=120,topEdge=56,botEdge=400;
-function layoutEdges(){topEdge=(eqOn?112:56)+(numsOn?32:0);botEdge=H-100;capR=Math.max(36,Math.min(120,Math.min(W,H)*.3,(botEdge-topEdge)/2))}
+function layoutEdges(){topEdge=(eqOn?60+($('eq').offsetHeight||46)+6:56)+(numsOn?32:0);botEdge=H-100;capR=Math.max(36,Math.min(120,Math.min(W,H)*.3,(botEdge-topEdge)/2))}
 function rad(n){return Math.min(20+13*Math.sqrt(n),capR)}
 function dotsFor(n,seed){var r=rad(n),out=[];for(var i=0;i<n;i++){var rr=Math.sqrt((i+.5)/n)*r*.66,a=i*2.39996+seed;out.push({x:Math.cos(a)*rr,y:Math.sin(a)*rr})}return out}
 function mk(n,x,y,gen){var s={id:uid++,n:n,x:x,y:y,vx:0,vy:0,gen:gen,hue:hueOf(gen),amp:.3,ph:Math.random()*6.28,seed:Math.random()*6.28,dots:[]};s.dots=dotsFor(n,s.seed);return s}
@@ -109,9 +109,14 @@ function eqHtml(){var arr=slimes.slice().sort(function(a,b){return a.x-b.x}),tot
   function chip(n,h){return '<span class="chip" style="background:'+col(h,1)+'">'+n+'</span>'}
   var totalChip='<span class="chip" style="background:#fff">'+tot+'</span>';
   if(eqMode==='sub')return '<span class="chip" style="background:#fff">'+subBase+'</span> <span class="op">−</span> '+chip(subRem,subHue)+' <span class="op">=</span> '+totalChip;
-  if(arr.length<2)return totalChip;
+  if(arr.length<2)return '<div class="ln">'+totalChip+'</div>';
   var parts2=arr.map(function(q){return chip(q.n,q.hue)}).join(' <span class="op">+</span> ');
-  return eqMode==='split'?totalChip+' <span class="op">=</span> '+parts2:parts2+' <span class="op">=</span> '+totalChip}
+  var base=eqMode==='split'?totalChip+' <span class="op">=</span> '+parts2:parts2+' <span class="op">=</span> '+totalChip,h='<div class="ln">'+base+'</div>',n=arr[0].n,same=n>=2;
+  arr.forEach(function(q){if(q.n!==n)same=false});
+  if(same){var k=arr.length,W1=function(v){return '<span class="chip" style="background:#fff">'+v+'</span>'},O=function(o){return ' <span class="op">'+o+'</span> '};
+    h+='<div class="ln sm">'+chip(n,arr[0].hue)+O('×')+W1(k)+O('=')+totalChip+'</div>';
+    h+='<div class="ln sm">'+totalChip+O('÷')+W1(k)+O('=')+chip(n,arr[0].hue)+'</div><div class="ln sm">'+totalChip+O('÷')+chip(n,arr[0].hue)+O('=')+W1(k)+'</div>'}
+  return h}
 function updateEq(){if(!eqOn)return;var sig=slimes.map(function(q){return q.n+'_'+Math.round(q.hue/12)+'_'+Math.round(q.x/30)}).join(',')+eqMode+subBase+'_'+subRem;if(sig===eqSig)return;eqSig=sig;$('eq').innerHTML=eqHtml()}
 var last=0;
 function frame(ts){var t=ts/1000,dt=Math.min(.05,t-last||.016);last=t;ctx.clearRect(0,0,W,H);layoutEdges();
