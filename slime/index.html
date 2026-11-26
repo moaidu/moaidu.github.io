@@ -241,9 +241,9 @@ function pictoHtml(m){
 function hintFor(m){var H=S().hint;return m.type==='pick'?H.pick:m.jar?H.jar:m.type==='make'||m.type==='multiply'?H.join:m.type==='regroup'?H.regroup:H.cut}
 function startMission(){
   mission=genMission(level,round);mistakes=0;solved=false;parts=[];diffWarned=false;populate();numsOn=level>=2||level===0;if(level<=1&&numsOnL[level]!==undefined)numsOn=numsOnL[level];
-  $('win').hidden=true;setStars(0);setDemo();render();if(level!==1&&round<=2)toast(hintFor(mission));else{clearTimeout(toastT);$('toast').style.opacity=0}if(level===1&&touched)speak(mText(mission));
+  $('win').hidden=true;setStars(0);setDemo();render();if(level!==1&&round<=2)toast(hintFor(mission));else{clearTimeout(toastT);$('toast').style.opacity=0}
 }
-function render(){var s=S();$('credit').textContent=s.cr;$('credit2').textContent=s.cr;$('ttl').textContent=s.title;var pic=level===1&&mission&&mission.type!=='play';$('mission').innerHTML=(pic?pictoHtml(mission):'<span>'+(mission?mText(mission):'')+'</span>')+'<button class="spk" id="spk" type="button" aria-label="'+s.speak+'"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.500 9a4 4 0 0 1 0 6M19 6.500a8 8 0 0 1 0 11"/></svg></button>';$('spk').onclick=function(){touched=true;speak(mission?mText(mission):'')};
+function render(){var s=S();$('credit').textContent=s.cr;$('credit2').textContent=s.cr;$('ttl').textContent=s.title;var pic=level===1&&mission&&mission.type!=='play';$('mission').innerHTML=(pic?pictoHtml(mission):'<span>'+(mission?mText(mission):'')+'</span>');
   $('mission').setAttribute('aria-label',mission?mText(mission).replace(/<[^>]+>/g,''):'');$('roundTag').textContent=s.round(round);$('rsTxt').textContent=s.reset;$('next').textContent=s.next;$('wbig').textContent=s.great;$('lvBtn').textContent=s.lv[level-1]+' ▾';$('lgBtn').textContent=s.lg;
   $('legend').innerHTML=[0,1,2].map(function(i){return '<div><i style="background:'+COLS[i][0]+'"></i>'+s.dig[i]+'</div>'}).join('');
   document.documentElement.lang=lang==='ko'?'ko':'en';document.title=s.title;
