@@ -36,7 +36,7 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 #next{margin-top:4px;background:#3fd28c;color:#06361f;font-size:20px;padding:10px 28px;border-radius:14px;box-shadow:0 4px 0 #1f8a5a}
 #next:active{transform:translateY(3px);box-shadow:0 1px 0 #1f8a5a}
 #eq{background:#00000033;border-radius:16px;padding:8px 12px;text-align:center;font-size:26px;letter-spacing:0;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;box-shadow:inset 0 0 0 2px #ffffff22}
-#eq .num{display:inline-block;min-width:1ch;transition:color .2s,transform .2s}#eq .chg{color:#ffe14d;transform:scale(1.12)}#eq .op{opacity:.8}#eq .res{color:#8cffc0}#eq .bad{color:#ffb070}#lvl .brand{background:#fff;border-radius:16px;padding:7px 16px;box-shadow:0 3px 0 #00000030;display:flex;margin-bottom:6px}#lvl .brand svg{height:26px;width:auto;display:block}#lvl .maker{font-size:13px;opacity:.85;text-align:center;max-width:340px;line-height:1.4}#pgWrap{position:fixed;inset:0;z-index:60;background:#1d1650}#pgWrap iframe{border:0;width:100%;height:100%;display:block}#eq .xl{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;font-size:.74em;opacity:.95}#eq .xl .sp{width:10px}#eq small{display:block;width:100%;font-size:15px;opacity:.85;letter-spacing:0}
+#eq .num{display:inline-block;min-width:1ch;transition:color .2s,transform .2s}#eq .chg{color:#ffe14d;transform:scale(1.12)}#eq .op{opacity:.8}#eq .res{color:#8cffc0}#eq .bad{color:#ffb070}#lvl .brand{background:#fff;border-radius:12px;padding:4px 11px;box-shadow:0 2px 0 #00000030;display:flex;margin-bottom:2px}#lvl .brand svg{height:17px;width:auto;display:block}#lvl .maker{font-size:13px;opacity:.85;text-align:center;max-width:340px;line-height:1.4}#pgWrap{position:fixed;inset:0;z-index:60;background:#1d1650}#pgWrap iframe{border:0;width:100%;height:100%;display:block}#eq .xl{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;font-size:.74em;opacity:.95}#eq .xl .sp{width:10px}#eq small{display:block;width:100%;font-size:15px;opacity:.85;letter-spacing:0}
 nav{display:flex;gap:10px;padding-bottom:2px}
 .tool{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--tool);border-radius:16px;padding:12px 8px;font-size:18px;box-shadow:0 4px 0 #00000040}
 .tool svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -96,7 +96,6 @@ header{grid-area:hd}.mission{grid-area:ms}#field{grid-area:fld}#eq{grid-area:eqa
   <h2 id="lvTitle"></h2>
   <div class="grid" id="lvGrid"></div>
   <button class="pill" id="lvLang" type="button"></button>
-  <div class="maker" id="maker"></div>
   <div class="credit" id="credit2"></div>
 </div>
 <script>
@@ -302,7 +301,7 @@ function drawDemo(t){if(!demo||solved||(touched&&performance.now()/1000-lastAct<
   var rr=demo.kind==='tap'?22+12*Math.abs(Math.sin(ph*6.28)):22;ctx.fillStyle='#ffffff55';ctx.strokeStyle='#ffe14d';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,y,rr,0,6.3);ctx.fill();ctx.stroke();
   ctx.font='46px serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.shadowColor='#0008';ctx.shadowBlur=6;ctx.fillText('\u{1F446}',x-17,y+(demo.kind==='tap'?46+6*Math.abs(Math.sin(ph*6.28)):42));ctx.restore()}
 // ---------- 단계 고르기 ----------
-function buildLevels(){var s=S();$('lvTitle').textContent=s.pick;$('maker').textContent=lang==='ko'?'만든 사람: 모아이듀':'Made by Moaidu';$('lvLang').textContent=s.lg;
+function buildLevels(){var s=S();$('lvTitle').textContent=s.pick;$('lvLang').textContent=s.lg;
   var dots=[COLS[0][0],COLS[0][0],COLS[1][0],COLS[2][0]];
   var h='<button class="lv play" type="button" data-l="0"'+(level===0?' aria-current="true"':'')+'><div class="dot" style="background:linear-gradient(135deg,'+COLS[0][0]+','+COLS[1][0]+','+COLS[2][0]+')"></div><b>'+s.playName+'</b><span>'+s.playSub+'</span></button>';
   h+=s.lv.map(function(n,i){return '<button class="lv" type="button" data-l="'+(i+1)+'"'+(i+1===level?' aria-current="true"':'')+'><div class="dot" style="background:'+dots[i]+'"></div><b>'+n+'</b><span>'+s.lvSub[i]+'</span></button>'}).join('');
