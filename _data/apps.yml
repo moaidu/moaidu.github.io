@@ -30,3 +30,9 @@
   url: /slime/play/
   button: 슬라임 놀이터 열기
   note: 전체 레벨(1~4단계 미션)은 <a href="/slime/">여기</a>에서 해 볼 수 있어요. © 2026 @cool.coolbro · 무단 복제·배포 금지
+- id: telo
+  name: Telo
+  icon: /assets/img/favicon.svg
+  tagline: 서술형 수학 AI 채점
+  status: 준비 중
+  desc: 학원용 서술형 수학 AI 채점 플랫폼이에요. 아직 공개 전이라 열어 볼 수 있는 주소는 없어요.

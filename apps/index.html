@@ -19,11 +19,12 @@ permalink: /apps/
       </div>
       <span class="chip">{{ a.status }}</span>
     </div>
-    <dl>
-      <div><dt>만든 이유</dt><dd>{{ a.why }}</dd></div>
-      <div><dt>이런 분께</dt><dd>{{ a.for }}</dd></div>
-    </dl>
-    <a class="btn" href="{{ a.url | relative_url }}">{{ a.button | default: "앱 열기" }} ↗</a>
+    {% if a.why or a.for %}<dl>
+      {% if a.why %}<div><dt>만든 이유</dt><dd>{{ a.why }}</dd></div>{% endif %}
+      {% if a.for %}<div><dt>이런 분께</dt><dd>{{ a.for }}</dd></div>{% endif %}
+    </dl>{% endif %}
+    {% if a.desc %}<p class="app-desc">{{ a.desc }}</p>{% endif %}
+    {% if a.url %}<a class="btn" href="{{ a.url | relative_url }}">{{ a.button | default: "앱 열기" }} ↗</a>{% endif %}
     {% if a.note %}<p class="app-note">{{ a.note }}</p>{% endif %}
   </article>
   {% endfor %}
