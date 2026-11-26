@@ -217,7 +217,7 @@ function populate(){var m=mission,cx=W/2,cy=H*.5;slimes=[];radScale=1;
 function byId(id){for(var i=0;i<slimes.length;i++)if(slimes[i].id===id)return slimes[i];return null}
 function num(v,orig){return '<span class="num'+(orig!==undefined&&v!==orig?' chg':'')+'">'+v+'</span>'}
 var OP=function(o){return ' <span class="op">'+o+'</span> '};
-function xlines(arr,tot){if(!(level===0||level>=3)||arr.length<2)return '';var n=arr[0].n,i;if(n<2)return '';for(i=1;i<arr.length;i++)if(arr[i].n!==n)return '';var k=arr.length,h='<div class="xl">'+num(n)+OP('×')+num(k)+OP('=')+'<span class="num res">'+tot+'</span></div>';if(level===0||level>=4)h+='<div class="xl">'+num(tot)+OP('÷')+num(k)+OP('=')+num(n)+'</div><div class="xl">'+num(tot)+OP('÷')+num(n)+OP('=')+num(k)+'</div>';return h}
+function xlines(arr,tot,noDiv){if(!(level===0||level>=3)||arr.length<2)return '';var n=arr[0].n,i;if(n<2)return '';for(i=1;i<arr.length;i++)if(arr[i].n!==n)return '';var k=arr.length,h='<div class="xl">'+num(n)+OP('×')+num(k)+OP('=')+'<span class="num res">'+tot+'</span></div>';if(!noDiv&&(level===0||level>=4))h+='<div class="xl">'+num(tot)+OP('÷')+num(k)+OP('=')+num(n)+'</div><div class="xl">'+num(tot)+OP('÷')+num(n)+OP('=')+num(k)+'</div>';return h}
 function updateEq(){var e=$('eq'),m=mission,E=S().eq;if(!m||!e)return;var h='';
   if(m.type==='play'){var arr0=slimes.slice().sort(function(a,b){return a.x-b.x}),t0=0;arr0.forEach(function(q){t0+=q.n});e.innerHTML=(arr0.length>1?arr0.map(function(q){return num(q.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+t0+'</span>':'<span class="num">'+t0+'</span>')+xlines(arr0,t0);return}
   if(false){}
@@ -225,9 +225,11 @@ function updateEq(){var e=$('eq'),m=mission,E=S().eq;if(!m||!e)return;var h='';
   else if(m.type==='takeaway'){var Q2=byId(m.idA);if(Q2){var d2=m.N-Q2.n;h=num(m.N)+OP(d2>=0?'−':'+')+num(Math.abs(d2),0)+OP('=')+'<span class="num res">'+Q2.n+'</span><small>'+E.takeN(m.N-m.T)+'</small>'}}
   else if(m.type==='pick'){h=num(m.a)+OP(m.want==='big'?'&gt;':'&lt;')+num(m.b)}
   else{var arr=slimes.slice().sort(function(a,b){return a.x-b.x}),tot=0;arr.forEach(function(s){tot+=s.n});
-    if(m.type==='split'||m.type==='equal'){h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+xlines(arr,tot)}
-    else if(m.type==='groupdiv'){var c=0;arr.forEach(function(s){if(s.n===m.m)c++});h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+'<small>'+E.groups(c,m.m)+'</small>'+xlines(arr,tot)}
-    else if(m.type==='multiply'){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span><small>'+E.times(m.a,m.k)+'</small>'+xlines(arr,tot)}
+    if(m.type==='split'||m.type==='equal'){if(arr.length===1){var nb=m.type==='equal'?m.pieces:2,bl=[];for(var bi=0;bi<nb;bi++)bl.push('<span class="num">?</span>');h=num(tot)+OP('=')+bl.join(OP('+'))}else h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+xlines(arr,tot)}
+    else if(m.type==='groupdiv'){var c=0;arr.forEach(function(s){if(s.n===m.m)c++});if(arr.length===1)h=num(tot)+OP('÷')+num(m.m)+OP('=')+'<span class="num">?</span>';else h=num(tot)+OP('=')+arr.map(function(s){return num(s.n)}).join(OP('+'))+'<small>'+E.groups(c,m.m)+'</small>'+xlines(arr,tot)}
+    else if(m.type==='multiply'){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span>'+xlines(arr,tot,true)}
+    else if(m.type==='make'){var best=null;arr.forEach(function(q){if(q.pts&&q.pts.length>1&&(!best||q.n===m.T||(best.n!==m.T&&q.pts.length>best.pts.length)))best=q});h=best?best.pts.map(num).join(OP('+'))+OP('=')+'<span class="num res">'+best.n+'</span>':'<span class="num">?</span>'+OP('+')+'<span class="num">?</span>'+OP('=')+'<span class="num res">'+m.T+'</span>'}
+    else if(m.type==='regroup'){var has10=arr.some(function(q){return q.n===10}),rest=tot-10;h=arr.map(function(q){return num(q.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span><div class="xl">'+num(10)+OP('+')+(has10?num(rest):'<span class="num">?</span>')+OP('=')+'<span class="num res">'+tot+'</span></div>'}
     else if(arr.length){h=arr.map(function(s){return num(s.n)}).join(OP('+'))+OP('=')+'<span class="num res">'+tot+'</span>'}
     else if(m.type==='fill'){h='<span class="num">0</span><small>'+E.target(m.T)+'</small>'}}
   if(m.jar&&h){var loose=0;slimes.forEach(function(q){if(q.id!==m.idA&&q.id!==m.idB)loose+=q.n});if(loose>0&&m.type!=='fill')h+='<small>'+E.loose(loose)+'</small>'}
@@ -320,7 +322,7 @@ function doCut(a,b){var out=[],cut=false,nx=-(b.y-a.y),ny=b.x-a.x,nl=Math.hypot(
   });
   if(cut){slimes=out;sfx.slice();evaluate()}else{toast(S().hint.across);sfx.bad()}}
 function tryMerge(s,ex,pt){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;var inside=pt?Math.hypot(o.x-pt.x,o.y-pt.y)<rad(o.n)*1.02:Math.hypot(o.x-s.x,o.y-s.y)<(rad(o.n)+rad(s.n))*.7;if(inside){if(o.n+s.n>999){toast(S().hint.max(999));return false}
-    var n=o.n+s.n,m=mk(n,(o.x*o.n+s.x*s.n)/n,(o.y*o.n+s.y*s.n)/n);m.id=(o.id===mission.idA||o.id===mission.idB)?o.id:(s.id===mission.idA||s.id===mission.idB)?s.id:(o.n>=s.n?o.id:s.id);m.mix=o.n>=s.n?o.mix:s.mix;m.amp=.5;
+    var n=o.n+s.n,m=mk(n,(o.x*o.n+s.x*s.n)/n,(o.y*o.n+s.y*s.n)/n);m.id=(o.id===mission.idA||o.id===mission.idB)?o.id:(s.id===mission.idA||s.id===mission.idB)?s.id:(o.n>=s.n?o.id:s.id);m.mix=o.n>=s.n?o.mix:s.mix;m.amp=.5;m.pts=(o.pts||[o.n]).concat(s.pts||[s.n]);
     slimes=slimes.filter(function(q){return q!==o&&q!==s});slimes.push(m);sfx.bloop();
     for(var q=0;q<8;q++)parts.push({x:m.x,y:m.y,vx:(Math.random()-.5)*140,vy:(Math.random()-.5)*140-20,life:1,c:pc(m)});evaluate();return true}}return false}
 function sameArr(a,b){if(a.length!==b.length)return false;for(var i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true}
