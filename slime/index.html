@@ -352,7 +352,7 @@ function drawSlime(s,t){var c=palette(s),r=rad(s.n),pk=(pull&&pull.s===s)?pull.k
   var lab=String(shown);ctx.font='22px Jua,system-ui,sans-serif';var tw=ctx.measureText(lab).width+18,ly=s.y-r-16;ctx.fillStyle='#ffffffee';ctx.beginPath();ctx.roundRect?ctx.roundRect(s.x-tw/2,ly-14,tw,28,14):ctx.rect(s.x-tw/2,ly-14,tw,28);ctx.fill();ctx.fillStyle='#2b2150';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lab,s.x,ly+1)}
 function nearTarget(s,ex){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;if(Math.hypot(o.x-lastP.x,o.y-lastP.y)<rad(o.n)*1.02)return o}return null}
 function jarOn(){return mission&&mission.jar&&!solved}
-function twoJars(){return jarOn()&&mission.type==='play'}
+function twoJars(){return jarOn()&&(mission.type==='play'||(level>=2&&mission.type==='addto'&&jarUnit()===1))}
 function inJar(x,y){if(y<=H-112)return false;if(!twoJars())return Math.abs(x-W/2)<74;return Math.abs(x-(W/2-58))<54||Math.abs(x-(W/2+58))<54}
 function drawJar(t,x0,ci,lab){var y0=H-(twoJars()?58:44);ctx.save();
   ctx.fillStyle='#ffffff22';ctx.strokeStyle='#ffffffaa';ctx.lineWidth=3;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x0-48,y0-30,96,62,[10,10,22,22]);else ctx.rect(x0-48,y0-30,96,62);ctx.fill();ctx.stroke();
