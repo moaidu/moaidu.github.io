@@ -95,7 +95,7 @@ function doCut(a,b){var out=[],cut=false,nx=-(b.y-a.y),ny=b.x-a.x,nl=Math.hypot(
     [L,Rr].forEach(function(arr,i){var cx=0,cy=0;arr.forEach(function(d){cx+=d.x;cy+=d.y});cx/=arr.length;cy/=arr.length;var p=mk(arr.length,s.x+cx,s.y+cy,g);p.hue=s.hue;p.vx=nx*(i?-1:1)*160;p.vy=ny*(i?-1:1)*160;p.amp=.5;out.push(p)});
     poof(s.x,s.y,hueOf(g),12)});
   if(cut){eqMode='split';cuts++;slimes=out;sfx.slice(gmax)}else sfx.bad()}
-function tryMerge(s,ex,pt){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;var inside=pt?Math.hypot(o.x-pt.x,o.y-pt.y)<rad(o.n)*1.02:false;if(inside){if(o.n+s.n>999){sfx.bad();return false}
+function tryMerge(s,ex,pt){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;var inside=pt?Math.hypot(o.x-pt.x,o.y-pt.y)<rad(o.n)*1.02:false;if(inside){if(o.n+s.n>99){o.amp=1;s.amp=1;sfx.bad();return false}
     var n=o.n+s.n,g=Math.min(o.gen,s.gen),m=mk(n,(o.x*o.n+s.x*s.n)/n,(o.y*o.n+s.y*s.n)/n,g);m.hue=o.n>=s.n?o.hue:s.hue;m.amp=.5;slimes=slimes.filter(function(q){return q!==o&&q!==s});slimes.push(m);eqMode='join';sfx.bloop(g);poof(m.x,m.y,m.hue,8);return true}}return false}
 // ---------- 그리기 ----------
 function blobPath(s,t){var r=rad(s.n),N=44;ctx.beginPath();for(var i=0;i<=N;i++){var a=i/N*6.2832,w=1+s.amp*Math.sin(3*a+s.ph+t*7)*.35+s.amp*Math.sin(5*a-t*5+s.seed)*.2+.025*Math.sin(2*a+t*1.7+s.ph),x=s.x+Math.cos(a)*r*w*1.04,y=s.y+Math.sin(a)*r*w*.94;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath()}
