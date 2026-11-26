@@ -64,9 +64,13 @@ function start(){slimes=[];parts=[];cuts=0;slimes.push(mk(12,W/2,H*.42,0))}
 // ---------- 입력 ----------
 function pos(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
 function hit(p){for(var i=slimes.length-1;i>=0;i--){var s=slimes[i];if(Math.hypot(p.x-s.x,p.y-s.y)<rad(s.n)*1.08)return s}return null}
+function tenPos(){return{x:Math.min(W/2+112,W-36),y:H-44}}
+function tenHit(p){var q=tenPos();return Math.hypot(p.x-q.x,p.y-q.y)<38}
+function drawTen(){var q=tenPos();ctx.save();ctx.fillStyle='#7bd0f0';ctx.strokeStyle='#ffffffcc';ctx.lineWidth=3;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(q.x-32,q.y-32,64,64,16);else ctx.rect(q.x-32,q.y-32,64,64);ctx.fill();ctx.stroke();ctx.fillStyle='#06283a';ctx.font='28px Jua,system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('10',q.x,q.y+2);ctx.restore()}
 function inJar(x,y){return y>H-112&&Math.abs(x-W/2)<74}
 function pullInfo(pl,p){var s=pl.s,r=rad(s.n),d=Math.hypot(p.x-s.x,p.y-s.y)-r*.55,steps=d<14?0:1+Math.floor((d-14)/14),max=s.n-1;return{k:steps===0?0:Math.max(1,Math.min(max,steps))}}
 cv.addEventListener('pointerdown',function(e){ac();touched=true;cv.setPointerCapture(e.pointerId);var p=pos(e);lastP=p;var s=hit(p);
+  if(!s&&tenHit(p)){var ts=mk(10,p.x,p.y-30,0);ts.fromJar=true;slimes.push(ts);drag={s:ts,dx:0,dy:-30};sfx.squish();return}
   if(!s&&inJar(p.x,p.y)){var ns=mk(1,p.x,p.y-30,0);ns.fromJar=true;slimes.push(ns);drag={s:ns,dx:0,dy:-30};sfx.squish();return}
   if(!s){knife={a:p,b:p};return}
   var rd=Math.hypot(p.x-s.x,p.y-s.y);slimes.splice(slimes.indexOf(s),1);slimes.push(s);
@@ -91,7 +95,7 @@ function doCut(a,b){var out=[],cut=false,nx=-(b.y-a.y),ny=b.x-a.x,nl=Math.hypot(
     [L,Rr].forEach(function(arr,i){var cx=0,cy=0;arr.forEach(function(d){cx+=d.x;cy+=d.y});cx/=arr.length;cy/=arr.length;var p=mk(arr.length,s.x+cx,s.y+cy,g);p.hue=s.hue;p.vx=nx*(i?-1:1)*160;p.vy=ny*(i?-1:1)*160;p.amp=.5;out.push(p)});
     poof(s.x,s.y,hueOf(g),12)});
   if(cut){eqMode='split';cuts++;slimes=out;sfx.slice(gmax)}else sfx.bad()}
-function tryMerge(s,ex,pt){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;var inside=pt?Math.hypot(o.x-pt.x,o.y-pt.y)<rad(o.n)*1.02:false;if(inside){if(o.n+s.n>99)return false;
+function tryMerge(s,ex,pt){for(var i=0;i<slimes.length;i++){var o=slimes[i];if(o===s||o===ex)continue;var inside=pt?Math.hypot(o.x-pt.x,o.y-pt.y)<rad(o.n)*1.02:false;if(inside){if(o.n+s.n>999){sfx.bad();return false}
     var n=o.n+s.n,g=Math.min(o.gen,s.gen),m=mk(n,(o.x*o.n+s.x*s.n)/n,(o.y*o.n+s.y*s.n)/n,g);m.hue=o.n>=s.n?o.hue:s.hue;m.amp=.5;slimes=slimes.filter(function(q){return q!==o&&q!==s});slimes.push(m);eqMode='join';sfx.bloop(g);poof(m.x,m.y,m.hue,8);return true}}return false}
 // ---------- 그리기 ----------
 function blobPath(s,t){var r=rad(s.n),N=44;ctx.beginPath();for(var i=0;i<=N;i++){var a=i/N*6.2832,w=1+s.amp*Math.sin(3*a+s.ph+t*7)*.35+s.amp*Math.sin(5*a-t*5+s.seed)*.2+.025*Math.sin(2*a+t*1.7+s.ph),x=s.x+Math.cos(a)*r*w*1.04,y=s.y+Math.sin(a)*r*w*.94;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath()}
@@ -123,7 +127,7 @@ function frame(ts){var t=ts/1000,dt=Math.min(.05,t-last||.016);last=t;ctx.clearR
   slimes.forEach(function(s){if(drag&&drag.s===s)return;s.x+=s.vx*dt;s.y+=s.vy*dt;s.vx*=.9;s.vy*=.9;var tg=hueOf(s.gen),dh=((tg-s.hue+540)%360)-180;s.hue=(s.hue+dh*.12+360)%360;s.amp*=.94;if(s.amp<.03)s.amp=.03+.02*Math.sin(t+s.ph)});
   for(var i=0;i<slimes.length;i++)for(var j=i+1;j<slimes.length;j++){var a=slimes[i],b=slimes[j];if(drag&&(drag.s===a||drag.s===b))continue;var dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,m=(rad(a.n)+rad(b.n))*.92;if(d<m){var p=(m-d)*.18;a.x-=dx/d*p;a.y-=dy/d*p;b.x+=dx/d*p;b.y+=dy/d*p}}
   slimes.forEach(function(s){var r=rad(s.n);s.x=Math.max(r+4,Math.min(W-r-4,s.x));if(drag&&drag.s===s)s.y=Math.max(r+50,Math.min(H-r*.4,s.y));else s.y=Math.max(topEdge+r,Math.min(Math.max(topEdge+r,botEdge-r),s.y))});
-  drawJar(t);slimes.forEach(function(s){drawSlime(s,t,(pull&&pull.s===s)?pull.k:0)});
+  drawJar(t);drawTen();slimes.forEach(function(s){drawSlime(s,t,(pull&&pull.s===s)?pull.k:0)});
   if(pull&&pull.k>0){var ps=pull.s,pk=pull.k,pr=rad(pk),dx2=pull.p.x-ps.x,dy2=pull.p.y-ps.y,dl=Math.hypot(dx2,dy2)||1,ux=dx2/dl,uy=dy2/dl,vx=-uy,vy=ux,r0=rad(ps.n)*.62,mid=Math.max(5,Math.min(r0,pr)*.38),g2=ps.gen+1;
     ctx.fillStyle=col(hueOf(g2-1),1);ctx.strokeStyle=col(hueOf(g2-1),0);ctx.lineWidth=3;ctx.beginPath();var sx=ps.x+ux*rad(ps.n)*.55,sy=ps.y+uy*rad(ps.n)*.55;
     ctx.moveTo(sx+vx*r0,sy+vy*r0);ctx.quadraticCurveTo(sx+ux*dl*.45+vx*mid,sy+uy*dl*.45+vy*mid,pull.p.x+vx*pr*.8,pull.p.y+vy*pr*.8);ctx.lineTo(pull.p.x-vx*pr*.8,pull.p.y-vy*pr*.8);ctx.quadraticCurveTo(sx+ux*dl*.45-vx*mid,sy+uy*dl*.45-vy*mid,sx-vx*r0,sy-vy*r0);ctx.closePath();ctx.fill();ctx.stroke();
