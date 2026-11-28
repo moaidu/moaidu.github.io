@@ -501,10 +501,26 @@ ACT.merge=function(T){var parts2=[],rest=T,np=T<=2?2:R(2,3);for(var i=0;i<np-1;i
   parts2.forEach(function(v,i){slimes.push(mk(v,W*(.2+.6*(i+.5)/parts2.length),H*(.3+.35*(i%2))))})};
 ACT.pop=function(T){T=Math.max(2,T);A={top:10,bot:H-10,pull:true,demo:'pull',onTap:onSlimeTap,onTear:function(){if(slimes.length===T&&slimes.every(function(q){return q.n===1}))good()}};
   setP('슬라임을 잡고 <b>쭉 당겨서</b> 하나씩 떼어 내요<br><small style="font-size:15px;opacity:.8">(구슬이 1개씩, 모두 '+T+'조각이 되게)</small>','당겨서 하나씩 떼어 내요');slimes.push(mk(T,W/2,H*.45))};
-ACT.finger=function(T){var up=[0,0,0,0,0],s=mk(T,W/2,H*.2);s.fixed=true;slimes.push(s);A={top:10,bot:H-10,
-  raw:function(p){var hx=W/2,hy=H*.8,sc=Math.min(1.2,W/340);for(var i=0;i<5;i++){var fx=hx+(i-2)*54*sc,fh=up[i]?120:30;if(Math.abs(p.x-fx)<26*sc&&p.y>hy-fh*sc-30*sc&&p.y<hy+10){up[i]=up[i]?0:1;sfx.tok(i);var c=up.reduce(function(a,b){return a+b},0);numFlash(c||'');if(c===T)setTimeout(function(){if(up.reduce(function(a,b){return a+b},0)===T)good()},350);else if(c>T)setP('손가락이 너무 많아요! 하나 접어 봐요.<br><b>'+T+'개</b>만 펴요')}}},
-  draw:function(t){var hx=W/2,hy=H*.8,sc=Math.min(1.2,W/340);ctx.save();ctx.fillStyle='#ffd9b3';ctx.strokeStyle='#d9a066';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect?ctx.roundRect(hx-135*sc,hy-10*sc,270*sc,110*sc,48*sc):ctx.rect(hx-135*sc,hy-10*sc,270*sc,110*sc);ctx.fill();ctx.stroke();
-    for(var i=0;i<5;i++){var fx=hx+(i-2)*54*sc,fh=(up[i]?120:30)*sc+(up[i]?Math.sin(t*6+i)*2:0);ctx.beginPath();ctx.roundRect?ctx.roundRect(fx-24*sc,hy-fh,48*sc,fh+20*sc,24*sc):ctx.rect(fx-24*sc,hy-fh,48*sc,fh+20*sc);ctx.fillStyle='#ffd9b3';ctx.fill();ctx.stroke()}ctx.restore()}};
+ACT.finger=function(T){var up=[0,0,0,0,0],fa=[0,0,0,0,0],s=mk(T,W/2,H*.2);s.fixed=true;s.rt=cr(T)*.85;relayout(s);slimes.push(s);
+  function geo(){var sc=Math.min(1.25,W/330),hx=W/2,hy=H*.68;return{sc:sc,hx:hx,hy:hy,F:[{x:-96,y:44,len:78,ang:-.85,w:44},{x:-63,y:-12,len:100,ang:-.07,w:40},{x:-21,y:-20,len:112,ang:-.01,w:40},{x:21,y:-16,len:104,ang:.04,w:40},{x:63,y:-4,len:86,ang:.12,w:36}]}}
+  function loc(g,f,p){var x0=g.hx+f.x*g.sc,y0=g.hy+f.y*g.sc,dx=p.x-x0,dy=p.y-y0,c=Math.cos(-f.ang),sn=Math.sin(-f.ang);return[(dx*c-dy*sn)/g.sc,(dx*sn+dy*c)/g.sc]}
+  function count(){return up.reduce(function(a,b){return a+b},0)}
+  A={top:10,bot:H-10,
+   raw:function(p){var g=geo();for(var i=4;i>=0;i--){var f=g.F[i],l=loc(g,f,p),h=34+(f.len-34)*Math.max(fa[i],up[i]);if(Math.abs(l[0])<f.w*.7&&l[1]>-h-14&&l[1]<18){up[i]=up[i]?0:1;sfx.tok(i);var c=count();numFlash(c||'');if(c===T)setTimeout(function(){if(count()===T)good()},400);else if(c>T)setP('손가락이 너무 많아요! 하나 접어 봐요.<br><b>'+T+'개</b>만 펴요');return}}},
+   draw:function(t){var g=geo(),sc=g.sc,hx=g.hx,hy=g.hy;ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+    for(var i=0;i<5;i++)fa[i]+=(up[i]-fa[i])*.22;
+    var skin=ctx.createLinearGradient(0,hy-60*sc,0,hy+130*sc);skin.addColorStop(0,'#ffe0c2');skin.addColorStop(1,'#f7c496');
+    /* 소매 */ ctx.fillStyle='#6fa3ff';ctx.strokeStyle='#3a60b0';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect?ctx.roundRect(hx-82*sc,hy+112*sc,164*sc,200*sc,18*sc):ctx.rect(hx-82*sc,hy+112*sc,164*sc,200*sc);ctx.fill();ctx.stroke();ctx.strokeStyle='#ffffff77';ctx.lineWidth=5;[26,52].forEach(function(o){ctx.beginPath();ctx.moveTo(hx-82*sc,hy+(112+o)*sc);ctx.lineTo(hx+82*sc,hy+(112+o)*sc);ctx.stroke()});
+    /* 손바닥 */ ctx.fillStyle=skin;ctx.strokeStyle='#d99a63';ctx.lineWidth=3.5;ctx.beginPath();ctx.roundRect?ctx.roundRect(hx-90*sc,hy-26*sc,180*sc,150*sc,58*sc):ctx.rect(hx-90*sc,hy-26*sc,180*sc,150*sc);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(200,130,80,.45)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(hx-62*sc,hy+40*sc);ctx.quadraticCurveTo(hx-20*sc,hy+78*sc,hx+30*sc,hy+66*sc);ctx.moveTo(hx-48*sc,hy+16*sc);ctx.quadraticCurveTo(hx,hy+34*sc,hx+52*sc,hy+24*sc);ctx.stroke();
+    /* 손가락 (엄지 먼저, 뒤에서부터) */ [0,4,3,1,2].forEach(function(i){var f=g.F[i],r=fa[i],len=34+(f.len-34)*r,w=f.w*sc,x0=hx+f.x*sc,y0=hy+f.y*sc;ctx.save();ctx.translate(x0,y0);ctx.rotate(f.ang);
+      var fg=ctx.createLinearGradient(-w/2,0,w/2,0);fg.addColorStop(0,'#f3bd8e');fg.addColorStop(.35,'#ffe3c8');fg.addColorStop(1,'#f0b886');ctx.fillStyle=r>.5?fg:'#f5c395';ctx.strokeStyle='#d99a63';ctx.lineWidth=3.5;
+      ctx.beginPath();ctx.roundRect?ctx.roundRect(-w/2,-len*sc,w,(len+16)*sc,w/2):ctx.rect(-w/2,-len*sc,w,(len+16)*sc);ctx.fill();ctx.stroke();
+      if(r>.6){ctx.fillStyle='#ffeee3';ctx.strokeStyle='#e6b48c';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(0,-len*sc+w*.42,w*.27,w*.34,0,0,6.3);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(200,130,80,.45)';ctx.lineWidth=2;[.42,.68].forEach(function(u){ctx.beginPath();ctx.moveTo(-w*.22,-len*sc*u);ctx.lineTo(w*.22,-len*sc*u);ctx.stroke()})}
+      else{ctx.strokeStyle='rgba(200,130,80,.6)';ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,-len*sc+w*.5,w*.28,.2,2.9);ctx.stroke()}
+      ctx.restore()});
+    /* 엄지 뿌리 덮개 */ ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(hx-72*sc,hy+52*sc,26*sc,28*sc,.4,0,6.3);ctx.fill();
+    ctx.restore()}};
   setP('손가락을 <b>'+T+'개</b> 펴 봐요','손가락 '+T+'개를 펴 봐요')};
 ACT.flash=function(T){var s=mk(T,W/2,H*.36);s.fixed=true;s.rt=cr(T);relayout(s);slimes.push(s);var hidden=false;A={top:10,bot:H-110,draw:function(){if(hidden)cloud(W/2,H*.36,120)}};setP('잠깐 보여 줄게요! <b>잘 보세요</b>','잘 보세요');
   setTimeout(function(){s.hide=true;hidden=true;setP('구슬이 <b>몇 개</b>였나요?','몇 개였나요?');
