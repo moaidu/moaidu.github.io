@@ -506,18 +506,19 @@ ACT.finger=function(T){var up=[0,0,0,0,0],fa=[0,0,0,0,0],s=mk(T,W/2,H*.2);s.fixe
   function loc(g,f,p){var x0=g.hx+f.x*g.sc,y0=g.hy+f.y*g.sc,dx=p.x-x0,dy=p.y-y0,c=Math.cos(-f.ang),sn=Math.sin(-f.ang);return[(dx*c-dy*sn)/g.sc,(dx*sn+dy*c)/g.sc]}
   function count(){return up.reduce(function(a,b){return a+b},0)}
   A={top:10,bot:H-10,
-   raw:function(p){var g=geo();for(var i=4;i>=0;i--){var f=g.F[i],l=loc(g,f,p),h=34+(f.len-34)*Math.max(fa[i],up[i]);if(Math.abs(l[0])<f.w*.7&&l[1]>-h-14&&l[1]<18){up[i]=up[i]?0:1;sfx.tok(i);var c=count();numFlash(c||'');if(c===T)setTimeout(function(){if(count()===T)good()},400);else if(c>T)setP('손가락이 너무 많아요! 하나 접어 봐요.<br><b>'+T+'개</b>만 펴요');return}}},
+   raw:function(p){var g=geo();for(var i=4;i>=0;i--){var f=g.F[i],l=loc(g,f,p),h=34+(f.len-34)*Math.max(fa[i],up[i]);if(Math.abs(l[0])<f.w*.7&&l[1]>-h-14&&l[1]<18){var nc=up[i]?i:i+1;for(var k=0;k<5;k++)up[k]=k<nc?1:0;sfx.tok(i);var c=count();numFlash(c||'');if(c===T)setTimeout(function(){if(count()===T)good()},400);else if(c>T)setP('손가락이 너무 많아요! 하나 접어 봐요.<br><b>'+T+'개</b>만 펴요');return}}},
    draw:function(t){var g=geo(),sc=g.sc,hx=g.hx,hy=g.hy;ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
     for(var i=0;i<5;i++)fa[i]+=(up[i]-fa[i])*.22;
     var skin=ctx.createLinearGradient(0,hy-60*sc,0,hy+130*sc);skin.addColorStop(0,'#ffe0c2');skin.addColorStop(1,'#f7c496');
     /* 소매 */ ctx.fillStyle='#6fa3ff';ctx.strokeStyle='#3a60b0';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect?ctx.roundRect(hx-82*sc,hy+112*sc,164*sc,200*sc,18*sc):ctx.rect(hx-82*sc,hy+112*sc,164*sc,200*sc);ctx.fill();ctx.stroke();ctx.strokeStyle='#ffffff77';ctx.lineWidth=5;[26,52].forEach(function(o){ctx.beginPath();ctx.moveTo(hx-82*sc,hy+(112+o)*sc);ctx.lineTo(hx+82*sc,hy+(112+o)*sc);ctx.stroke()});
     /* 손바닥 */ ctx.fillStyle=skin;ctx.strokeStyle='#d99a63';ctx.lineWidth=3.5;ctx.beginPath();ctx.roundRect?ctx.roundRect(hx-90*sc,hy-26*sc,180*sc,150*sc,58*sc):ctx.rect(hx-90*sc,hy-26*sc,180*sc,150*sc);ctx.fill();ctx.stroke();
-    ctx.strokeStyle='rgba(200,130,80,.45)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(hx-62*sc,hy+40*sc);ctx.quadraticCurveTo(hx-20*sc,hy+78*sc,hx+30*sc,hy+66*sc);ctx.moveTo(hx-48*sc,hy+16*sc);ctx.quadraticCurveTo(hx,hy+34*sc,hx+52*sc,hy+24*sc);ctx.stroke();
+    /* 손등: 손가락 뿌리 마디 */ ctx.strokeStyle='rgba(200,130,80,.35)';ctx.lineWidth=2.2;[-63,-21,21,63].forEach(function(x){ctx.beginPath();ctx.arc(hx+x*sc,hy-6*sc,9*sc,.25,2.9);ctx.stroke()});
     /* 손가락 (엄지 먼저, 뒤에서부터) */ [0,4,3,1,2].forEach(function(i){var f=g.F[i],r=fa[i],len=34+(f.len-34)*r,w=f.w*sc,x0=hx+f.x*sc,y0=hy+f.y*sc;ctx.save();ctx.translate(x0,y0);ctx.rotate(f.ang);
       var fg=ctx.createLinearGradient(-w/2,0,w/2,0);fg.addColorStop(0,'#f3bd8e');fg.addColorStop(.35,'#ffe3c8');fg.addColorStop(1,'#f0b886');ctx.fillStyle=r>.5?fg:'#f5c395';ctx.strokeStyle='#d99a63';ctx.lineWidth=3.5;
       ctx.beginPath();ctx.roundRect?ctx.roundRect(-w/2,-len*sc,w,(len+16)*sc,w/2):ctx.rect(-w/2,-len*sc,w,(len+16)*sc);ctx.fill();ctx.stroke();
-      if(r>.6){ctx.fillStyle='#ffeee3';ctx.strokeStyle='#e6b48c';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(0,-len*sc+w*.42,w*.27,w*.34,0,0,6.3);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(200,130,80,.45)';ctx.lineWidth=2;[.42,.68].forEach(function(u){ctx.beginPath();ctx.moveTo(-w*.22,-len*sc*u);ctx.lineTo(w*.22,-len*sc*u);ctx.stroke()})}
-      else{ctx.strokeStyle='rgba(200,130,80,.6)';ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,-len*sc+w*.5,w*.28,.2,2.9);ctx.stroke()}
+      var na=Math.max(0,Math.min(1,(r-.4)/.45));
+      if(na>0){ctx.save();ctx.globalAlpha=na;ctx.fillStyle='#ffeee3';ctx.strokeStyle='#e6b48c';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(0,-len*sc+w*.42,w*.27,w*.34*(.4+.6*na),0,0,6.3);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(200,130,80,.45)';ctx.lineWidth=2;[.42,.68].forEach(function(u){ctx.beginPath();ctx.moveTo(-w*.22,-len*sc*u);ctx.lineTo(w*.22,-len*sc*u);ctx.stroke()});ctx.restore()}
+      var fo=1-na;if(fo>0){ctx.save();ctx.globalAlpha=fo;ctx.fillStyle='rgba(255,255,255,.5)';ctx.beginPath();ctx.ellipse(-w*.12,-len*sc+w*.45,w*.12,w*.07,-.5,0,6.3);ctx.fill();ctx.strokeStyle='rgba(200,130,80,.5)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-w*.2,-len*sc+w*.82);ctx.lineTo(w*.2,-len*sc+w*.82);ctx.stroke();ctx.restore()}
       ctx.restore()});
     /* 엄지 뿌리 덮개 */ ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(hx-72*sc,hy+52*sc,26*sc,28*sc,.4,0,6.3);ctx.fill();
     ctx.restore()}};
